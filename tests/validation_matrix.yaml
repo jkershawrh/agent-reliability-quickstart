@@ -1,0 +1,27 @@
+schema_version: "1.0"
+scenarios:
+  - id: REL-001
+    layer: contract
+    behavior: Healthy advice is grounded and requires approval
+    test: tests/test_reliability.py::test_healthy_path_is_sourced_and_requires_approval
+  - id: REL-002
+    layer: safety
+    behavior: Prompt injection abstains before tools or inference
+    test: tests/test_reliability.py::test_prompt_injection_abstains_before_model_or_tools
+  - id: REL-003
+    layer: authorization
+    behavior: Unauthorized tools are denied
+    test: tests/test_reliability.py::test_unauthorized_tool_is_denied
+  - id: REL-004
+    layer: resilience
+    behavior: Inference disruption produces a non-fabricated degraded response
+    test: tests/test_reliability.py::test_inference_failure_degrades_without_fabrication
+  - id: REL-005
+    layer: security
+    behavior: Lab failure injection is disabled in the base profile
+    test: tests/test_reliability.py::test_failure_injection_is_off_in_default_profile
+  - id: REL-006
+    layer: protocol
+    behavior: MCP publishes only read-only evidence tools
+    test: tests/test_contracts.py::test_mcp_lists_only_read_only_tools
+

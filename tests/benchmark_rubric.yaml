@@ -1,0 +1,12 @@
+schema_version: "1.0"
+benchmarks:
+  - id: PERF-001
+    scenario: healthy-single-seat
+    pass: 100 percent successful responses with complete evidence
+  - id: PERF-002
+    scenario: twenty-five-seat-functional
+    pass: At least 99 percent successful responses and no cross-tenant data
+  - id: PERF-003
+    scenario: degraded-model
+    pass: Every request returns the deterministic degraded response within the configured timeout budget
+

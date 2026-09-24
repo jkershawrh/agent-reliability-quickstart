@@ -1,4 +1,6 @@
-# When Agents Fail — Reliable Agentic AI on OpenShift
+# Build a Reliable Agentic AI Workflow on OpenShift
+
+## Overview
 
 A 75-minute Red Hat and Intel quickstart-to-lab showing how a NOC incident
 advisor fails safely on Red Hat OpenShift with CPU inference on Intel Xeon.
@@ -50,3 +52,53 @@ catalog or provisioning assets.
 
 Licensed under the MIT License.
 
+## Table of contents
+
+- Architecture and product roles
+- Requirements
+- Deploy
+- Repository structure
+- Validation and certification
+- References
+
+## Architecture and product roles
+
+OpenShift supplies isolation and identity; OpenShift AI supplies model serving
+and supported guardrails; OpenShift Pipelines proves behavior; OpenShift GitOps
+restores the known-good state; Intel Xeon supplies CPU inference capacity.
+
+## Requirements
+
+- OpenShift 4.21-compatible cluster and `oc` access
+- Supported OpenShift AI, OpenShift Pipelines, and OpenShift GitOps Operators
+- Tenant-scoped access to the Flightpath model gateway
+- Python 3.9+ for local control testing
+
+## Deploy
+
+Use `oc apply -k deploy/base` after Launchpad creates the tenant-scoped
+`model-connection` Secret. The lab overlay is deliberately separate and is
+only used in controlled learner namespaces.
+
+## Repository structure
+
+- `src/`: API, MCP service, policy, guardrails, and inference adapter
+- `config/`: safe and lab-only reliability profiles
+- `deploy/`: OpenShift, GitOps, Pipelines, and OpenShift AI integration assets
+- `modules/`: Showroom-ready learner content
+- `tests/`: contract, safety, publication, and certification definitions
+
+## Validation and certification
+
+`make precommit` is the local gate. Live model, guardrail, image, lifecycle,
+multi-tenant, and 25-seat evidence are required before Launchpad activation.
+
+## References
+
+- Red Hat OpenShift AI supported configurations
+- Red Hat OpenShift AI TrustyAI and NeMo Guardrails documentation
+- Model Context Protocol and OpenAI-compatible chat-completion interfaces
+
+## Tags
+
+`openshift` `openshift-ai` `pipelines` `gitops` `intel-xeon` `mcp` `agentic-ai`

@@ -1,0 +1,19 @@
+schema_version: "1.0"
+claims:
+  - id: CLAIM-001
+    statement: The application runs with CPU inference through an OpenAI-compatible endpoint.
+    evidence: Flightpath certification required
+    status: pending-live-evidence
+  - id: CLAIM-002
+    statement: Unauthorized tool requests are rejected before execution.
+    evidence: REL-003
+    status: locally-verified
+  - id: CLAIM-003
+    statement: Inference failure never reports a completed diagnosis or action.
+    evidence: REL-004
+    status: locally-verified
+  - id: CLAIM-004
+    statement: The experience supports 25 simultaneous Launchpad seats.
+    evidence: Capacity qualification required
+    status: unproven
+

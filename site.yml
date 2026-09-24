@@ -1,0 +1,12 @@
+site:
+  title: When Agents Fail
+  start_page: agent-reliability-quickstart::index.adoc
+content:
+  sources:
+    - url: .
+      branches: HEAD
+ui:
+  bundle:
+    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/v0.0.2/ui-bundle.zip
+    snapshot: true
+
