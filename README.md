@@ -17,9 +17,9 @@ qualification suite, and six Showroom-ready Antora modules.
 - Model credentials come from the `model-connection` Secret and are never
   rendered into Showroom content or API output.
 - The default service account has no resource-mutation RBAC.
-- The local guardrail is deterministic developer scaffolding. Flightpath
-  certification must validate the same contract through supported OpenShift AI
-  TrustyAI/NeMo Guardrails.
+- The Helm deployment creates an authenticated, RHOAI-managed TrustyAI/NeMo
+  Guardrails service. If that service is unavailable, the application applies
+  a deterministic fail-closed policy and reports the fallback explicitly.
 
 ## Local validation
 
@@ -63,9 +63,10 @@ Licensed under the MIT License.
 
 ## Architecture and product roles
 
-OpenShift supplies isolation and identity; OpenShift AI supplies model serving
-and supported guardrails; OpenShift Pipelines proves behavior; OpenShift GitOps
-restores the known-good state; Intel Xeon supplies CPU inference capacity.
+OpenShift supplies isolation and identity; OpenShift AI manages the supported
+TrustyAI/NeMo safety service; OpenShift Pipelines proves behavior; OpenShift
+GitOps restores the known-good state. The existing Flightpath MaaS gateway
+supplies tenant-scoped, OpenAI-compatible CPU inference on Intel Xeon.
 
 ## Requirements
 

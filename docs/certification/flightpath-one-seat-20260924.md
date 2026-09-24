@@ -92,12 +92,12 @@ namespaces.
    `set-security-context` option and an explicit restricted security context on
    the qualification step.
 
-## Remaining certification gates
+## Remaining certification gate
 
-- Route input screening through supported TrustyAI/NeMo Guardrails and record
-  that external policy decision in the response contract.
-- Prove a RHOAI-managed CPU model-serving path or revise the catalog claim to
-  describe the current Flightpath gateway accurately.
+- Qualify the pinned integrated release in one Flightpath seat, recording the
+  RHOAI-managed TrustyAI/NeMo decision, fail-closed fallback, recovery, and
+  reclaim evidence. Model inference intentionally remains on the existing
+  tenant-scoped Flightpath MaaS gateway; no duplicate model server is deployed.
 
 The Launchpad lifecycle, capacity, isolation, and cleanup path has no remaining
 qualification gate through 25 seats.

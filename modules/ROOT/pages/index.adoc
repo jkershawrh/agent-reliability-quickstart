@@ -19,8 +19,8 @@ lab does not perform autonomous remediation.
 
 == Product roles
 
-OpenShift runs and isolates the application. OpenShift AI supplies supported
-model serving and guardrails. OpenShift Pipelines proves behavior. OpenShift
-GitOps restores the known-good state. Intel Xeon supplies the CPU inference
-execution context.
-
+OpenShift runs and isolates the application. OpenShift AI manages the supported
+TrustyAI/NeMo guardrail service. OpenShift Pipelines proves behavior and
+OpenShift GitOps restores the known-good state. The existing Flightpath MaaS
+gateway supplies tenant-scoped CPU inference on Intel Xeon; this quickstart
+does not deploy a duplicate model server.
