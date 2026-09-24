@@ -98,8 +98,10 @@ never enter GitOps values.
 
 ## Validation and certification
 
-`make precommit` is the local gate. Live model, guardrail, image, lifecycle,
-multi-tenant, and 25-seat evidence are required before Launchpad activation.
+`make precommit` is the local gate. The pinned release passed integrated
+Flightpath model, RHOAI guardrail, image, lifecycle, isolation, clean re-order,
+and 25-seat qualification. See
+`docs/certification/flightpath-one-seat-20260924.md` for the recorded evidence.
 
 ## References
 

@@ -6,8 +6,9 @@
 - Red Hat OpenShift AI Operator: 3.5.1 (`stable-3.5`)
 - Red Hat OpenShift Pipelines: 1.24.0 (`pipelines-1.24`)
 - Red Hat OpenShift GitOps: 1.21.4
-- Application image: `quay.io/rh-ee-jkershaw/agent-reliability-quickstart@sha256:ccb631bb51942c71ae02f167fb39dc6e0931d7624243890acafcdbd510a1d0ce`
-- Source revision: `cf0d72b21bcb3a8a08df4a94a8a5fc6d02ed2566`
+- Application image: `quay.io/rh-ee-jkershaw/agent-reliability-quickstart@sha256:7aff969774fa4b3efac77de4525a046a9c36ce8609de77af20f1077ad17a79d1`
+- Qualified source revision: `66638c95db0f8a56f80646086e1b639ce4625d1e`
+- Qualified Launchpad revision: `2b8bfce961daccbb73b9ab49a46589a9dffb1651`
 - Model: `granite-3.2-8b-tools`, CPU inference through the Flightpath candidate gateway
 - Launchpad workshop: `c3c33daf-3134-42e5-91b3-6a2a1415bea0`
 - Launchpad session: `eccabba6-0851-451c-86f1-0e2364512732`
@@ -58,20 +59,48 @@ Healthy CPU inference times were 14,667.79, 14,679.99, 14,665.66, 14,781.40,
 and 14,710.77 ms. Workshop reclaim produced five provider-confirmed revocation
 receipts, cleared every persisted key, and deleted all five tenant namespaces.
 
-## Twenty-five-seat qualification
+## Final integrated one-seat qualification
 
-Workshop `fd42dc9f-7773-4f4f-b7b5-52fd2892f881` provisioned 25 seats in
-controlled waves of five. All seats reached ready with healthy application,
-MCP, and Showroom deployments. The workshop contained 25 runtime Secrets with
-25 distinct key hashes.
+Workshop `42189e8b-3cf8-4610-8d1f-3d09cebba6cc` reached `ready` through the
+normal Launchpad lifecycle without manual repair. The application, MCP server,
+RHOAI-managed NeMo Guardrails service, Showroom, Pipeline, and GitOps
+application were healthy.
 
-Twenty-five qualification PipelineRuns executed concurrently. All 25
-scorecards passed and all 100 scenario checks produced the expected outcomes.
-Healthy CPU inference measured 16,010.88–18,391.55 ms, with p50 16,921.56 ms
-and p95 17,212.46 ms. This supports the lab's functional capacity claim without
-making a sub-second latency claim. Bulk reclaim cleared all 25 persisted keys,
-recorded 25 provider-confirmed revocation receipts, and deleted all 25 tenant
-namespaces.
+PipelineRun `agent-reliability-qualification-fvsdz` passed all four scenarios
+in 19 seconds. Healthy inference completed in 13,829.97 ms with three evidence
+records and mandatory human approval. Prompt injection abstained before model
+or tool execution, the unauthorized request was denied with no executed tool,
+and inference disruption produced an explicit degraded response without a
+fabricated diagnosis.
+
+The prompt-injection scenario reported `rhoai-nemo` while NeMo was available.
+After NeMo was deliberately scaled to zero it remained fail-closed and reported
+`local-policy-fallback`; after restoration it returned to `rhoai-nemo`.
+Credential-value comparison covered six response files and 59 application log
+lines and found no disclosure. The workload service account could neither list
+nodes nor create deployments; its additional permission is limited to reading
+Services in its own namespace for the RHOAI guardrail proxy.
+
+Reclaim revoked the MaaS key, removed the GitOps application, and deleted the
+tenant namespace with no residual resources.
+
+## Final twenty-five-seat qualification
+
+Workshop `633b3ec3-5a96-4b72-ae09-f19472698852` passed Launchpad's capacity
+preview and provisioned 25 of 25 seats. All 25 application and all 25 NeMo
+deployments became ready, and every seat contained its qualification Pipeline.
+
+The first batch request continued on the server after its client timed out, so
+a second submission produced an unplanned but useful doubled-load run: 50
+PipelineRuns, two per seat. All 50 runs and all 200 scenario checks passed.
+The scorecards recorded 150 `rhoai-nemo` decisions. Healthy CPU inference under
+this doubled load measured 16,849.15–34,209.25 ms, with p50 24,559.63 ms and
+p95 28,903.76 ms. These results support functional concurrency at the intended
+25-seat Launchpad size without claiming sub-second latency.
+
+All 25 sessions reclaimed successfully, all 25 MaaS keys were revoked or
+absent, all GitOps applications were removed, and all 25 tenant namespaces
+were deleted. Final residue was zero.
 
 ## Findings corrected
 
@@ -82,8 +111,8 @@ namespaces.
    30 seconds.
 3. The OpenShift Route timeout was raised to 90 seconds so it exceeds the
    bounded retry budget.
-4. The private Quay image requires the Launchpad registry pull Secret attached
-   to the workload service account.
+4. The Quay repository is public and the catalog pins its immutable manifest
+   digest rather than a mutable tag or local image ID.
 5. Launchpad's seat-aware GitOps contract requires a Helm chart so it can pass
    only the external Secret name; the endpoint and key never enter Git values.
 6. The catalog tabs require explicit `showroom.terminal` and
@@ -91,13 +120,15 @@ namespaces.
 7. Restricted tenant namespaces require Tekton's supported
    `set-security-context` option and an explicit restricted security context on
    the qualification step.
+8. RHOAI NeMo access requires a namespace-qualified TLS service hostname and a
+   narrowly scoped permission to read Services in the tenant namespace.
+9. Launchpad GitOps requires explicit permissions for the RHOAI
+   `NemoGuardrails` and Tekton `Pipeline` resources used by the release.
 
-## Remaining certification gate
+## Certification status
 
-- Qualify the pinned integrated release in one Flightpath seat, recording the
-  RHOAI-managed TrustyAI/NeMo decision, fail-closed fallback, recovery, and
-  reclaim evidence. Model inference intentionally remains on the existing
-  tenant-scoped Flightpath MaaS gateway; no duplicate model server is deployed.
-
-The Launchpad lifecycle, capacity, isolation, and cleanup path has no remaining
-qualification gate through 25 seats.
+The pinned integrated release passed lifecycle, RHOAI guardrail, fail-closed
+fallback, recovery, policy enforcement, credential isolation, Pipeline,
+25-seat capacity, reclaim, and clean re-order qualification. Model inference
+remains on the tenant-scoped Flightpath MaaS gateway; no duplicate model server
+is deployed. No technical activation blocker remains.
