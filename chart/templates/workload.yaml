@@ -49,7 +49,8 @@ spec:
               valueFrom: {secretKeyRef: {name: {{ .Values.model.existingSecret | quote }}, key: api-key}}
             - {name: MCP_URL, value: "http://noc-evidence-mcp:8080"}
             {{- if .Values.guardrails.enabled }}
-            - {name: GUARDRAILS_ENDPOINT, value: {{ .Values.guardrails.endpoint | quote }}}
+            - name: GUARDRAILS_ENDPOINT
+              value: {{ default (printf "https://ar-guardrails.%s.svc:443" .Release.Namespace) .Values.guardrails.endpoint | quote }}
             {{- end }}
           ports: [{name: http, containerPort: 8080}]
           readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 3}

@@ -7,7 +7,9 @@ model:
 
 guardrails:
   enabled: true
-  endpoint: https://ar-guardrails:443
+  # Leave empty to use the namespace-qualified service DNS name required by
+  # the RHOAI-issued serving certificate.
+  endpoint: ""
 route:
   enabled: true
   # Keep the Route name short because OpenShift derives a host label from
