@@ -48,6 +48,9 @@ spec:
             - name: MODEL_API_KEY
               valueFrom: {secretKeyRef: {name: {{ .Values.model.existingSecret | quote }}, key: api-key}}
             - {name: MCP_URL, value: "http://noc-evidence-mcp:8080"}
+            {{- if .Values.guardrails.enabled }}
+            - {name: GUARDRAILS_ENDPOINT, value: {{ .Values.guardrails.endpoint | quote }}}
+            {{- end }}
           ports: [{name: http, containerPort: 8080}]
           readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 3}
           livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10}
@@ -57,8 +60,21 @@ spec:
             capabilities: {drop: [ALL]}
             runAsNonRoot: true
             seccompProfile: {type: RuntimeDefault}
-          volumeMounts: [{name: profile, mountPath: /etc/reliability, readOnly: true}]
-      volumes: [{name: profile, configMap: {name: agent-reliability-profile}}]
+          volumeMounts:
+            - {name: profile, mountPath: /etc/reliability, readOnly: true}
+            {{- if .Values.guardrails.enabled }}
+            - {name: guardrails-token, mountPath: /var/run/secrets/guardrails, readOnly: true}
+            - {name: guardrails-ca, mountPath: /etc/guardrails-ca, readOnly: true}
+            {{- end }}
+      volumes:
+        - {name: profile, configMap: {name: agent-reliability-profile}}
+        {{- if .Values.guardrails.enabled }}
+        - name: guardrails-token
+          projected:
+            sources:
+              - serviceAccountToken: {path: token, expirationSeconds: 3600}
+        - {name: guardrails-ca, configMap: {name: ar-guardrails-ca-bundle}}
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

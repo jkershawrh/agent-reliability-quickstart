@@ -1,0 +1,51 @@
+{{- if .Values.guardrails.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: ar-rails}
+data:
+  config.yaml: |
+    rails:
+      config:
+        regex_detection:
+          input:
+            patterns:
+              - "ignore (all |any )?(previous|prior) instructions"
+              - "reveal (the )?(system prompt|secret|api key|token)"
+              - "bypass (the )?(guardrail|policy|authorization)"
+            case_insensitive: true
+      input:
+        flows:
+          - regex check input
+  rails.co: |
+    # Built-in regex rail only; no LLM call is required.
+---
+apiVersion: trustyai.opendatahub.io/v1alpha1
+kind: NemoGuardrails
+metadata:
+  name: ar-guardrails
+  annotations:
+    security.opendatahub.io/enable-auth: "true"
+spec:
+  nemoConfigs:
+    - name: ar
+      configMaps: [ar-rails]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {name: agent-reliability-guardrails-client}
+rules:
+  - apiGroups: [""]
+    resources: [services]
+    resourceNames: [ar-guardrails-service]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {name: agent-reliability-guardrails-client}
+subjects:
+  - {kind: ServiceAccount, name: agent-reliability}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: agent-reliability-guardrails-client
+{{- end }}

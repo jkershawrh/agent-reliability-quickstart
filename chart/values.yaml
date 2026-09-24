@@ -4,6 +4,10 @@ image:
   pullPolicy: IfNotPresent
 model:
   existingSecret: model-connection
+
+guardrails:
+  enabled: true
+  endpoint: https://ar-guardrails:443
 route:
   enabled: true
   name: agent-reliability
