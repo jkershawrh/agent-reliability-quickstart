@@ -2,8 +2,8 @@ schema_version: "1.0"
 claims:
   - id: CLAIM-001
     statement: The application runs with CPU inference through an OpenAI-compatible endpoint.
-    evidence: Flightpath certification required
-    status: pending-live-evidence
+    evidence: docs/certification/flightpath-one-seat-20260924.md
+    status: one-seat-verified
   - id: CLAIM-002
     statement: Unauthorized tool requests are rejected before execution.
     evidence: REL-003
@@ -16,4 +16,3 @@ claims:
     statement: The experience supports 25 simultaneous Launchpad seats.
     evidence: Capacity qualification required
     status: unproven
-
