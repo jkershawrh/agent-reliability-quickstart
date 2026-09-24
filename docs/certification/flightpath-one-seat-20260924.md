@@ -32,6 +32,18 @@ removed the key from the persisted session, recorded a provider-confirmed
 revocation receipt, deleted the tenant namespace, and removed its GitOps
 applications.
 
+## Clean re-order
+
+A second independent order, workshop
+`db8c0e87-166f-4298-b513-3637a128783e`, provisioned source revision
+`04f8feee58965a8b6e9397487b61db0928869a9d` after the first workshop had been
+fully reclaimed. Both workload and Showroom content were pinned to that
+revision, and both GitOps applications were healthy and synced. PipelineRun
+`agent-reliability-qualification-qrs2h` passed all four scenarios; healthy CPU
+inference completed in 13,827.77 ms. The fresh seat key returned HTTP 200 and a
+missing key returned HTTP 401. Final reclaim recorded provider-confirmed key
+revocation, cleared the persisted key, and deleted the second tenant namespace.
+
 ## Findings corrected
 
 1. The canary namespace required the standard
@@ -57,5 +69,4 @@ applications.
   that external policy decision in the response contract.
 - Prove a RHOAI-managed CPU model-serving path or revise the catalog claim to
   describe the current Flightpath gateway accurately.
-- Run five-seat and 25-seat capacity and isolation tests, followed by a clean
-  re-order test of the pinned release.
+- Run five-seat and 25-seat capacity and tenant-isolation tests.
