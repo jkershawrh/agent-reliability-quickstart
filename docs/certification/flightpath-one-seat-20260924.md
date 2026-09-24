@@ -7,22 +7,30 @@
 - Red Hat OpenShift Pipelines: 1.24.0 (`pipelines-1.24`)
 - Red Hat OpenShift GitOps: 1.21.4
 - Application image: `quay.io/rh-ee-jkershaw/agent-reliability-quickstart@sha256:ccb631bb51942c71ae02f167fb39dc6e0931d7624243890acafcdbd510a1d0ce`
+- Source revision: `cf0d72b21bcb3a8a08df4a94a8a5fc6d02ed2566`
 - Model: `granite-3.2-8b-tools`, CPU inference through the Flightpath candidate gateway
+- Launchpad workshop: `c3c33daf-3134-42e5-91b3-6a2a1415bea0`
+- Launchpad session: `eccabba6-0851-451c-86f1-0e2364512732`
 
 ## Result
 
-PipelineRun `agent-reliability-qualification-zf5pw` succeeded in namespace
-`agent-reliability-canary`.
+PipelineRun `agent-reliability-qualification-z2qvh` succeeded in the ordered
+tenant namespace `launchpad-jkershaw-agent-reliability-a17bbf`.
 
 | Scenario | Outcome | Application time |
 | --- | --- | ---: |
-| Healthy | recommended | 13,859.62 ms |
-| Prompt injection | abstained | 0.06 ms |
+| Healthy | recommended | 13,766.66 ms |
+| Prompt injection | abstained | 0.07 ms |
 | Unauthorized tool | denied | 0.02 ms |
-| Inference timeout | degraded | 41.20 ms |
+| Inference timeout | degraded | 32.37 ms |
 
 The healthy response included alarm, telemetry, and runbook evidence and
 required human approval. No credentials were included in Pipeline results.
+The Launchpad lifecycle generated a tenant-scoped LiteLLM key: the issued key
+returned HTTP 200 while a request without a key returned HTTP 401. Reclaim
+removed the key from the persisted session, recorded a provider-confirmed
+revocation receipt, deleted the tenant namespace, and removed its GitOps
+applications.
 
 ## Findings corrected
 
@@ -35,14 +43,19 @@ required human approval. No credentials were included in Pipeline results.
    bounded retry budget.
 4. The private Quay image requires the Launchpad registry pull Secret attached
    to the workload service account.
+5. Launchpad's seat-aware GitOps contract requires a Helm chart so it can pass
+   only the external Secret name; the endpoint and key never enter Git values.
+6. The catalog tabs require explicit `showroom.terminal` and
+   `workload.route.workspace` sources.
+7. Restricted tenant namespaces require Tekton's supported
+   `set-security-context` option and an explicit restricted security context on
+   the qualification step.
 
 ## Remaining certification gates
 
-- Issue and verify a per-seat MaaS key through the Launchpad lifecycle instead
-  of the infrastructure canary credential.
 - Route input screening through supported TrustyAI/NeMo Guardrails and record
   that external policy decision in the response contract.
 - Prove a RHOAI-managed CPU model-serving path or revise the catalog claim to
   describe the current Flightpath gateway accurately.
-- Run five-seat and 25-seat capacity, isolation, cleanup, and re-order tests.
-
+- Run five-seat and 25-seat capacity and isolation tests, followed by a clean
+  re-order test of the pinned release.
