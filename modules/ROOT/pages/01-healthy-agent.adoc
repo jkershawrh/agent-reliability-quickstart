@@ -53,6 +53,14 @@ the combination of useful content and a provable execution path.
 
 == Do: Run the healthy workflow
 
+Open *Reliability Advisor*. Keep the default NOC request, select *Healthy
+evidence-backed request*, and run it. The summary should show outcome
+`recommended`, model `available`, three executed evidence tools, three evidence
+records, human approval `true`, and a trace ID. Expand *Structured decision
+evidence* to see the complete contract.
+
+Now use *Terminal* to prove that the visual summary came from the same API.
+
 Confirm that your terminal is already scoped to the seat namespace. Then find
 the short application Route and submit the simulated NOC alarm.
 
@@ -81,6 +89,11 @@ oc get deployment agent-reliability \
 You should find the advisor and the read-only NOC evidence MCP service. Record
 the immutable image reference shown by the Deployment. That reference connects
 the observed behavior to a deployable artifact rather than an ambiguous tag.
+
+Open *OpenShift Console* and navigate to *Workloads → Deployments* in your
+project. Locate `agent-reliability` and `noc-evidence-mcp`. Confirm both are
+available, then return to the guide. This establishes the platform view you
+will revisit during disruption and qualification.
 
 === Verify
 

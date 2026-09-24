@@ -57,6 +57,10 @@ control every downstream decision.
 
 Read the profile mounted into the application.
 
+Keep *Reliability Advisor* open with the healthy result. Its six summary fields
+are the visible projection of the policy and execution metadata you inspect
+below; the model response alone is not the workspace.
+
 [source,bash,role="execute"]
 ----
 oc get configmap agent-reliability-profile \
@@ -128,6 +132,11 @@ This architecture reduces blast radius, but it does not prove confidentiality
 or compliance. A production review must also examine egress, logging, data
 retention, token rotation, tenancy, model-provider handling, and incident
 response.
+
+In *OpenShift Console*, open the `agent-reliability` Deployment and inspect its
+service account name, ConfigMap mount, health status, and environment-variable
+names. Do not reveal Secret values. The Console view should corroborate the
+Terminal checks without expanding learner privilege.
 
 == Key takeaway
 

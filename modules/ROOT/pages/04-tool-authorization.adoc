@@ -30,6 +30,11 @@ No model completion can change those answers.
 
 == Do: Request a destructive action
 
+In *Reliability Advisor*, select *Unauthorized tool request*. The case should
+move to `denied` before evidence or inference. Expand the structured evidence
+and locate `delete_network_config` under requested tools while executed tools
+remain empty. Then prove both authorization layers in Terminal.
+
 Submit the lab-only unauthorized-tool scenario.
 
 [source,bash,role="execute"]

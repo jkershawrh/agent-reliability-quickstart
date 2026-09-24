@@ -81,6 +81,22 @@ The qualification demonstrates application contracts; it does not certify a
 production NOC, universal prompt-injection resistance, model accuracy, or
 autonomous remediation.
 
+== How to use the three workspaces
+
+The lab is designed as one incident shown through three complementary views:
+
+* *Reliability Advisor* is the operator view. Start every scenario here and
+  watch the outcome, model state, tools, evidence count, approval boundary, and
+  trace ID change.
+* *Terminal* is the proof view. Use it to repeat requests, assert contracts,
+  inspect policy, and export evidence.
+* *OpenShift Console* is the platform view. Use it at named checkpoints to
+  inspect workloads, identity, logs, PipelineRuns, and recovery state.
+
+Do not treat the tabs as three separate exercises. Each module follows the same
+rhythm: run or select the case in Advisor, prove the execution path in Terminal,
+then use Console when the platform boundary is part of the lesson.
+
 == Estimated time
 
 75–90 minutes. Complete the modules in order so each failure can be compared

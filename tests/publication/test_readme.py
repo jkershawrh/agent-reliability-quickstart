@@ -47,3 +47,20 @@ def test_showroom_contains_original_learning_visuals():
         "failure-paths.svg",
         "qualification-loop.svg",
     }
+
+
+def test_showroom_workspaces_are_part_of_the_journey():
+    config = __import__("yaml").safe_load(Path("ui-config.yml").read_text())
+    assert [tab["name"] for tab in config["tabs"]] == [
+        "Reliability Advisor",
+        "Terminal",
+        "OpenShift Console",
+    ]
+    content = "\n".join(
+        path.read_text() for path in Path("modules/ROOT/pages").glob("*.adoc")
+    )
+    assert content.count("*Reliability Advisor*") >= 6
+    assert content.count("*OpenShift Console*") >= 4
+    workspace = Path("src/main.py").read_text()
+    for state in ("1 · Healthy", "2 · Abstain", "3 · Deny", "4 · Degrade"):
+        assert state in workspace

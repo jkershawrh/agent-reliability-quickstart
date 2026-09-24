@@ -42,6 +42,11 @@ prompt-injection resistance.
 
 == Do: Submit the controlled injection
 
+In *Reliability Advisor*, select *Prompt injection* and run the check. The
+visible state should move from healthy `recommended` to `abstained`: no tools,
+no evidence records, model not called, approval still required, and a new trace
+ID. Keep that result visible while Terminal verifies the same contract.
+
 Use the lab-only failure selector to supply a known unsafe input.
 
 [source,bash,role="execute"]

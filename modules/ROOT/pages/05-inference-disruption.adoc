@@ -40,6 +40,12 @@ not remediation, and it must not be confused with a completed diagnosis.
 
 == Do: Trigger the controlled timeout
 
+In *Reliability Advisor*, select *Inference disruption* and run the check. This
+state is intentionally different from the previous two failures: evidence
+tools run and three records remain visible, but model status becomes
+`unavailable` and outcome becomes `degraded`. The user is directed to the manual
+path instead of receiving a fabricated diagnosis.
+
 Submit the lab-only inference disruption scenario.
 
 [source,bash,role="execute"]
@@ -91,6 +97,11 @@ curl -fsS "$ROUTE/health" | jq
 
 This distinction lets monitoring report application availability and inference
 dependency health separately.
+
+Open *OpenShift Console* and confirm the advisor Deployment remains available.
+The injected timeout changes one request path; it does not crash or scale the
+shared application or model. Return to Advisor and verify the degraded result
+is still explicit despite the healthy workload.
 
 == Inspect what was preserved
 
