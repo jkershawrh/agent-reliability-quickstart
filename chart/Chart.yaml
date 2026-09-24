@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agent-reliability-quickstart
+description: Reliable agentic AI quickstart for Red Hat OpenShift
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

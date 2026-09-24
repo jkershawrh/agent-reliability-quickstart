@@ -1,0 +1,22 @@
+image:
+  repository: quay.io/rh-ee-jkershaw/agent-reliability-quickstart
+  digest: sha256:ccb631bb51942c71ae02f167fb39dc6e0931d7624243890acafcdbd510a1d0ce
+  pullPolicy: IfNotPresent
+model:
+  existingSecret: model-connection
+route:
+  enabled: true
+  name: agent-reliability
+profile:
+  timeoutSeconds: 30
+  maxAttempts: 2
+  backoffSeconds: 0.25
+  guardrailMode: enforce
+  labFailureInjection: false
+resources:
+  api:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: "1", memory: 512Mi}
+  mcp:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {cpu: 250m, memory: 256Mi}

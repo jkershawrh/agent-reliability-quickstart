@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: agent-reliability}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: agent-reliability-profile}
+data:
+  reliability-profile.yaml: |
+    api_version: reliability.agentic.redhat.com/v1alpha1
+    kind: AgentReliabilityProfile
+    name: noc-safe-default
+    retry:
+      timeout_seconds: {{ .Values.profile.timeoutSeconds }}
+      max_attempts: {{ .Values.profile.maxAttempts }}
+      backoff_seconds: {{ .Values.profile.backoffSeconds }}
+    allowed_tools: [get_alarm, get_telemetry, get_runbook]
+    guardrail_mode: {{ .Values.profile.guardrailMode }}
+    required_evidence: [alarm, telemetry, runbook]
+    degraded_message: Inference is temporarily unavailable. No diagnosis or action was produced; continue with the approved manual NOC runbook.
+    lab_failure_injection: {{ .Values.profile.labFailureInjection }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-reliability
+  labels: {app.kubernetes.io/name: agent-reliability}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: agent-reliability}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: agent-reliability}
+    spec:
+      serviceAccountName: agent-reliability
+      automountServiceAccountToken: false
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - {name: RELIABILITY_PROFILE, value: /etc/reliability/reliability-profile.yaml}
+            - name: MODEL_ENDPOINT
+              valueFrom: {secretKeyRef: {name: {{ .Values.model.existingSecret | quote }}, key: endpoint}}
+            - name: MODEL_NAME
+              valueFrom: {secretKeyRef: {name: {{ .Values.model.existingSecret | quote }}, key: model}}
+            - name: MODEL_API_KEY
+              valueFrom: {secretKeyRef: {name: {{ .Values.model.existingSecret | quote }}, key: api-key}}
+            - {name: MCP_URL, value: "http://noc-evidence-mcp:8080"}
+          ports: [{name: http, containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 3}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10}
+          resources: {{- toYaml .Values.resources.api | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+          volumeMounts: [{name: profile, mountPath: /etc/reliability, readOnly: true}]
+      volumes: [{name: profile, configMap: {name: agent-reliability-profile}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: agent-reliability}
+spec:
+  selector: {app.kubernetes.io/name: agent-reliability}
+  ports: [{name: http, port: 8080, targetPort: http}]
+{{- if .Values.route.enabled }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ .Values.route.name }}
+  annotations: {haproxy.router.openshift.io/timeout: 90s}
+spec:
+  to: {kind: Service, name: agent-reliability}
+  tls: {termination: edge, insecureEdgeTerminationPolicy: Redirect}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: noc-evidence-mcp
+  labels: {app.kubernetes.io/name: noc-evidence-mcp}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: noc-evidence-mcp}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: noc-evidence-mcp}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: mcp
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [uvicorn, src.mcp:app, --host, 0.0.0.0, --port, "8080"]
+          ports: [{name: http, containerPort: 8080}]
+          resources: {{- toYaml .Values.resources.mcp | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: noc-evidence-mcp}
+spec:
+  selector: {app.kubernetes.io/name: noc-evidence-mcp}
+  ports: [{name: http, port: 8080, targetPort: http}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: agent-reliability-default-deny}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {network.openshift.io/policy-group: ingress}
+    - from:
+        - podSelector: {}

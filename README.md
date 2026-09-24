@@ -80,11 +80,18 @@ Use `oc apply -k deploy/base` after Launchpad creates the tenant-scoped
 `model-connection` Secret. The lab overlay is deliberately separate and is
 only used in controlled learner namespaces.
 
+Seat-aware platforms can deploy the equivalent Helm chart with `helm upgrade
+--install agent-reliability ./chart --set
+model.existingSecret=model-connection`. The chart accepts only the Secret name;
+model endpoint and credential values remain in the namespace-scoped Secret and
+never enter GitOps values.
+
 ## Repository structure
 
 - `src/`: API, MCP service, policy, guardrails, and inference adapter
 - `config/`: safe and lab-only reliability profiles
 - `deploy/`: OpenShift, GitOps, Pipelines, and OpenShift AI integration assets
+- `chart/`: seat-aware Helm deployment with external Secret binding
 - `modules/`: Showroom-ready learner content
 - `tests/`: contract, safety, publication, and certification definitions
 
