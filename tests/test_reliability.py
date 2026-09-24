@@ -91,6 +91,25 @@ async def test_external_guardrail_failure_falls_back_closed(tmp_path):
     assert result.policy_decisions[0]["provider"] == "local-policy-fallback"
 
 
+@pytest.mark.asyncio
+async def test_external_guardrail_failure_blocks_clean_input_in_enforce_mode(tmp_path):
+    profile = AgentReliabilityProfile.load("config/reliability-profile.lab.yaml")
+    client = NemoGuardrailClient(
+        "https://guardrails.example",
+        token_file=str(tmp_path / "missing-token"),
+        ca_file=False,
+    )
+    service = ReliabilityService(profile, DemoProvider(), guardrail_client=client)
+
+    result = await service.advise(IncidentRequest(query="Diagnose NOC-1042"))
+
+    assert result.outcome == "abstained"
+    assert result.model_status == "not_called"
+    assert result.executed_tools == []
+    assert result.policy_decisions[0]["decision"] == "deny"
+    assert result.policy_decisions[0]["provider"] == "local-policy-fallback"
+
+
 def test_helm_release_contains_evidence_rich_qualification_pipeline():
     pipeline = Path("chart/templates/qualification-pipeline.yaml").read_text()
     for field in (

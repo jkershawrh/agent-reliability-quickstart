@@ -1,27 +1,54 @@
-schema_version: "1.0"
-scenarios:
-  - id: REL-001
-    layer: contract
-    behavior: Healthy advice is grounded and requires approval
-    test: tests/test_reliability.py::test_healthy_path_is_sourced_and_requires_approval
-  - id: REL-002
-    layer: safety
-    behavior: Prompt injection abstains before tools or inference
-    test: tests/test_reliability.py::test_prompt_injection_abstains_before_model_or_tools
-  - id: REL-003
-    layer: authorization
-    behavior: Unauthorized tools are denied
-    test: tests/test_reliability.py::test_unauthorized_tool_is_denied
-  - id: REL-004
-    layer: resilience
-    behavior: Inference disruption produces a non-fabricated degraded response
-    test: tests/test_reliability.py::test_inference_failure_degrades_without_fabrication
-  - id: REL-005
-    layer: security
-    behavior: Lab failure injection is disabled in the base profile
-    test: tests/test_reliability.py::test_failure_injection_is_off_in_default_profile
-  - id: REL-006
-    layer: protocol
-    behavior: MCP publishes only read-only evidence tools
-    test: tests/test_contracts.py::test_mcp_lists_only_read_only_tools
-
+schema_version: quickstart.redhat.com/validation-matrix/v1
+stages:
+  - id: stage-0-contracts
+    name: Contracts and secure defaults
+    method: CDD
+    threshold: 100
+    required: true
+    checks:
+      - participant-workspace-served
+      - failure-injection-disabled-by-default
+      - mcp-tools-read-only
+      - no-literal-secrets
+  - id: stage-1-behavior
+    name: Reliability behavior
+    method: TDD
+    threshold: 100
+    required: true
+    checks:
+      - healthy-advice-grounded
+      - prompt-injection-stops-before-tools
+      - unauthorized-tool-denied
+      - inference-disruption-degrades-without-fabrication
+  - id: stage-2-components
+    name: Component integration
+    method: CBT
+    threshold: 100
+    required: true
+    checks:
+      - external-guardrail-decision-recorded
+      - guardrail-outage-fallback-recorded
+      - model-secret-external-to-git
+      - qualification-pipeline-renders
+  - id: stage-3-launchpad-lifecycle
+    name: Launchpad lifecycle and scale
+    method: EDD
+    threshold: 100
+    required: true
+    checks:
+      - one-seat-order-and-reclaim
+      - clean-reorder
+      - five-seat-isolation
+      - twenty-five-seat-concurrency
+      - zero-residue-reclaim
+  - id: stage-4-participant-journey
+    name: Participant experience
+    method: BDD
+    threshold: 100
+    required: true
+    checks:
+      - showroom-opens
+      - workspace-opens
+      - healthy-scenario-completes
+      - three-failure-scenarios-complete
+      - qualification-scorecard-visible

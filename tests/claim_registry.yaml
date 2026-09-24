@@ -14,5 +14,5 @@ claims:
     status: locally-verified
   - id: CLAIM-004
     statement: The experience supports 25 simultaneous Launchpad seats.
-    evidence: Capacity qualification required
-    status: unproven
+    evidence: docs/certification/flightpath-one-seat-20260924.md
+    status: twenty-five-seat-verified

@@ -90,8 +90,12 @@ class ReliabilityService:
             try:
                 guard = await self.guardrail_client.screen(guard_text, self.profile.guardrail_mode)
             except (OSError, httpx.HTTPError, ValueError):
-                guard = screen(guard_text, self.profile.guardrail_mode)
-                guard = type(guard)(guard.allowed, f"{guard.reason}:external_unavailable", "local-policy-fallback")
+                local_decision = screen(guard_text, self.profile.guardrail_mode)
+                guard = type(local_decision)(
+                    False if self.profile.guardrail_mode == "enforce" else local_decision.allowed,
+                    f"{local_decision.reason}:external_unavailable",
+                    "local-policy-fallback",
+                )
         else:
             guard = screen(guard_text, self.profile.guardrail_mode)
         decisions.append({"control": "input-guardrail", "decision": "allow" if guard.allowed else "deny", "reason": guard.reason, "provider": guard.provider})

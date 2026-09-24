@@ -68,6 +68,19 @@ TrustyAI/NeMo safety service; OpenShift Pipelines proves behavior; OpenShift
 GitOps restores the known-good state. The existing Flightpath MaaS gateway
 supplies tenant-scoped, OpenAI-compatible CPU inference on Intel Xeon.
 
+## Architecture
+
+The participant works through Showroom and the Reliability Advisor route in a
+seat-isolated namespace. The advisor retrieves simulated alarm, telemetry, and
+runbook evidence from a read-only MCP service, screens input through the
+OpenShift AI managed guardrail service, and calls the Launchpad MaaS endpoint
+with a tenant-scoped key. OpenShift RBAC remains the authorization boundary;
+the model can recommend but cannot grant itself mutation privileges.
+
+An OpenShift Pipeline exercises the same application contract and records a
+structured scorecard. GitOps owns the known-good workload state, while
+Launchpad owns model-key issuance, validation, expiration, and reclaim.
+
 ## Requirements
 
 - OpenShift 4.21-compatible cluster and `oc` access
