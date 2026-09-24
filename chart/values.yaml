@@ -1,6 +1,6 @@
 image:
   repository: quay.io/rh-ee-jkershaw/agent-reliability-quickstart
-  digest: sha256:7aff969774fa4b3efac77de4525a046a9c36ce8609de77af20f1077ad17a79d1
+  digest: sha256:604331d4a050f47457e27c2191106aa3fa075d408514143cd9eac6da18dfc3fb
   pullPolicy: IfNotPresent
 model:
   existingSecret: model-connection
