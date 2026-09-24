@@ -1,15 +1,85 @@
-= 5. Build: Degrade safely during inference disruption
+= 5. Degrade safely during inference disruption
 
-Trigger the controlled inference timeout:
+Inference is a remote dependency. A timeout must not become an invented
+diagnosis, an infinite retry storm, or an unbounded queue of model requests.
 
-[source,bash]
+== What you will learn
+
+* Trigger a controlled inference timeout without disrupting the shared model.
+* Recognize an explicit degraded response.
+* Explain how bounded retries protect both users and shared capacity.
+* Distinguish service degradation from successful diagnosis.
+
+== See: The bounded failure path
+
+The reliability profile defines a request timeout, retry limit, backoff, and a
+human-readable degraded message. These limits form a time budget around the
+remote model call.
+
+When the budget is exhausted, the application returns a known degraded state.
+It does not claim that the alarm was diagnosed, and it does not call a repair
+tool. The operator is directed to the approved manual NOC runbook.
+
+Bounded retries matter at workshop scale. If every seat retries indefinitely,
+a transient model slowdown amplifies into additional load. A small, explicit
+budget prevents that positive feedback loop.
+
+== Do: Trigger the controlled timeout
+
+Submit the lab-only inference disruption scenario.
+
+[source,bash,role="execute"]
 ----
+test -n "$ROUTE" || ROUTE="https://$(oc get route ar -o jsonpath='{.spec.host}')"
+START=$(date +%s)
 curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
-  -d '{"query":"Diagnose NOC-1042","failure":"inference_timeout"}' | jq
+  -d '{"query":"Diagnose NOC-1042","failure":"inference_timeout"}' \
+  | tee /tmp/inference-timeout.json | jq
+END=$(date +%s)
+echo "Elapsed seconds: $((END - START))"
 ----
 
-The outcome is `degraded`, model status is `unavailable`, and the response
-directs the operator to the approved manual runbook. It must not claim that a
-diagnosis or remediation occurred. Bounded retries prevent an outage from
-turning into an unbounded queue of model calls.
+This scenario simulates the application-visible timeout. It does not scale,
+restart, or otherwise alter the shared MaaS service.
 
+=== Verify
+
+Assert that the response reports degradation rather than success.
+
+[source,bash,role="execute"]
+----
+jq -e '
+  .outcome == "degraded" and
+  .model_status == "unavailable" and
+  (.executed_tools | length == 0) and
+  .human_approval_required == true
+' /tmp/inference-timeout.json
+----
+
+Inspect the message and policy metadata.
+
+[source,bash,role="execute"]
+----
+jq '{outcome, model_status, message, policy_decisions, executed_tools, trace_id}' \
+  /tmp/inference-timeout.json
+----
+
+The message must direct the operator to the manual runbook. It must not state
+that a diagnosis, repair, or configuration change occurred.
+
+Run the health endpoint once more. Application health may remain available
+even though one dependency path was degraded.
+
+[source,bash,role="execute"]
+----
+curl -fsS "$ROUTE/health" | jq
+----
+
+This distinction lets monitoring report application availability and inference
+dependency health separately.
+
+== Key takeaway
+
+Reliable degradation is a designed product behavior. Bounded retries, an
+explicit unavailable state, and a safe manual path protect correctness and
+shared capacity when inference cannot respond.

@@ -1,19 +1,80 @@
-= 2. Tell: Understand the safety architecture
+= 2. Understand the safety architecture
 
-The model proposes; it does not authorize. The orchestrator accepts only MCP
-tools named in the reliability profile. The service account and OpenShift RBAC
-remain an independent enforcement boundary. Input guardrails run before tools
-or inference, and evidence validation runs before a recommendation is returned.
+You now have a healthy result. This module shows why it can be trusted and
+which control owns each decision. The model proposes; it does not authorize.
 
-GitOps owns the deployable known-good state. Pipelines tests behavior against
-that state. These are different controls: reconciliation cannot prove semantic
-behavior, and a successful test cannot correct configuration drift.
+== What you will learn
 
-Inspect the active profile:
+* Map prevention, authorization, evidence, recovery, and identity controls.
+* Explain why GitOps and behavioral tests solve different problems.
+* Inspect the versioned reliability profile used by the application.
+* Identify the boundary between reasoning and deterministic enforcement.
 
-[source,bash]
+== See: Independent control planes
+
+Input guardrails run before tools or inference. The orchestrator accepts only
+MCP tools named in the reliability profile. OpenShift RBAC independently limits
+the workload service account. Evidence validation runs after inference and
+before a recommendation is returned.
+
+The controls form a sequence, not a single opaque agent:
+
+* **Input policy** rejects known unsafe instructions before tool execution.
+* **Tool policy** limits the callable evidence surface.
+* **OpenShift identity** limits what the workload may ask the platform to do.
+* **Evidence policy** rejects unsupported conclusions.
+* **Human approval** separates recommendation from action.
+* **GitOps** restores declared deployment state after drift.
+* **Pipelines** prove behavior against the deployed state.
+
+GitOps cannot prove that prompt injection is contained. A passing behavioral
+test cannot reconcile a changed Deployment. Both controls are required.
+
+== Do: Inspect the active policy
+
+Read the profile mounted into the application.
+
+[source,bash,role="execute"]
 ----
 oc get configmap agent-reliability-profile \
-  -o jsonpath='{.data.reliability-profile\.yaml}'
+  -o jsonpath='{.data.reliability-profile\.yaml}' | tee /tmp/reliability-profile.yaml
+echo
 ----
 
+Inspect the workload identity and its namespace permissions.
+
+[source,bash,role="execute"]
+----
+NS="$(oc project -q)"
+oc get deployment agent-reliability \
+  -o jsonpath='{.spec.template.spec.serviceAccountName}{"\n"}'
+oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" get services
+oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" create deployments
+----
+
+The service account has only the narrow permission needed to discover its
+guardrail service. It must not be able to create deployments.
+
+=== Verify
+
+Check the essential fields without changing the ConfigMap.
+
+[source,bash,role="execute"]
+----
+grep -E 'guardrail_mode|required_evidence|allowed_tools|degraded_message' \
+  /tmp/reliability-profile.yaml
+test "$(oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" create deployments)" = "no"
+----
+
+You should see an enforcing guardrail mode, three allowed read-only tools,
+required evidence, and an explicit degraded message. The authorization check
+must return `no`.
+
+The profile is configuration rather than prompt text. Operators can review and
+version it without relying on hidden model instructions.
+
+== Key takeaway
+
+Reliable agentic systems use independently testable controls. Model behavior is
+one layer; policy, identity, evidence validation, GitOps, pipelines, and human
+approval remain separate enforcement boundaries.

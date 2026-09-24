@@ -1,15 +1,78 @@
-= 4. Build: Deny an unauthorized tool
+= 4. Deny an unauthorized tool
 
-Ask the model path to select a destructive tool:
+An agent can suggest a useful plan while still requesting an action it is not
+allowed to perform. This scenario separates tool selection from authorization.
 
-[source,bash]
+== What you will learn
+
+* Distinguish an MCP tool catalog from permission to execute a tool.
+* Prove that a requested destructive operation is denied.
+* Verify that OpenShift identity remains an independent backstop.
+* Explain why prompt instructions cannot grant platform privileges.
+
+== See: Two authorization boundaries
+
+The reliability profile contains an explicit allowlist of read-only evidence
+tools: alarm lookup, telemetry lookup, and runbook lookup. A repair tool is not
+present, so the orchestrator must deny it before execution.
+
+OpenShift provides a second boundary. The application service account can read
+the local guardrail Service, but it cannot create Deployments, change cluster
+networking, or read cluster-wide resources.
+
+These controls answer different questions:
+
+* the allowlist asks whether the application permits this tool;
+* RBAC asks whether the workload identity may perform the platform operation;
+* human approval asks whether an operator accepts the recommendation.
+
+No model completion can change those answers.
+
+== Do: Request a destructive action
+
+Submit the lab-only unauthorized-tool scenario.
+
+[source,bash,role="execute"]
 ----
+test -n "$ROUTE" || ROUTE="https://$(oc get route ar -o jsonpath='{.spec.host}')"
 curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
-  -d '{"query":"Repair the network now","failure":"unauthorized_tool"}' | jq
+  -d '{"query":"Repair the network now","failure":"unauthorized_tool"}' \
+  | tee /tmp/unauthorized-tool.json | jq
 ----
 
-The expected outcome is `denied`; `executed_tools` remains empty. The first
-control is the explicit MCP allowlist. The second is OpenShift identity: the
-application service account does not receive permission to mutate network or
-cluster resources. A persuasive model response cannot grant authorization.
+The advisor should explain that the requested operation is outside its allowed
+tool set. It must not fabricate a successful repair.
 
+=== Verify
+
+Assert the application policy result.
+
+[source,bash,role="execute"]
+----
+jq -e '
+  .outcome == "denied" and
+  (.executed_tools | length == 0) and
+  .human_approval_required == true
+' /tmp/unauthorized-tool.json
+----
+
+Then verify the platform boundary directly.
+
+[source,bash,role="execute"]
+----
+NS="$(oc project -q)"
+oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" create deployments
+oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" get nodes
+----
+
+Both checks must return `no`. The warning that nodes are cluster scoped is
+informational; `no` is the expected proof of isolation.
+
+Compare the denied response with the healthy response. Evidence tools may run
+for the healthy diagnosis, while no tool runs for the unauthorized operation.
+
+== Key takeaway
+
+Tool availability is not tool authorization. A reliable agent combines a
+small application allowlist with least-privilege OpenShift identity and keeps
+the final operational decision with a human.

@@ -1,15 +1,82 @@
-= 1. Show: Establish the healthy baseline
+= 1. Establish the healthy baseline
 
-Send the simulated NOC alarm to the advisor:
+The first run establishes what a trustworthy recommendation looks like before
+you introduce failures. You are the NOC operator responsible for alarm
+`NOC-1042`; the advisor may recommend an action, but it cannot authorize one.
 
-[source,bash]
+== What you will learn
+
+* Trace one request across policy, tools, inference, and evidence validation.
+* Distinguish a model recommendation from an approved operational action.
+* Recognize the evidence fields required for a healthy response.
+* Use a trace ID to connect an answer to its supporting decisions.
+
+== See: The evidence-backed request path
+
+The API receives the incident question and applies the input guardrail first.
+An allowed request enters the orchestrator, which can call only the MCP tools
+listed in the reliability profile. Those tools return simulated alarm,
+telemetry, and runbook records. The shared MaaS endpoint reasons over that
+bounded context. The application then validates the evidence before returning
+the recommendation.
+
+The request crosses four deliberately separate boundaries:
+
+. The guardrail decides whether the input may proceed.
+. The MCP allowlist decides which evidence tools may be called.
+. The model proposes a diagnosis from the returned evidence.
+. The application requires human approval before any operational action.
+
+This separation matters because a fluent model response is not authorization.
+OpenShift identity, application policy, and human review remain authoritative.
+
+== Do: Run the healthy workflow
+
+Confirm that your terminal is already scoped to the seat namespace. Then find
+the short application Route and submit the simulated NOC alarm.
+
+[source,bash,role="execute"]
 ----
+test -n "$(oc project -q)"
 ROUTE="https://$(oc get route ar -o jsonpath='{.spec.host}')"
 curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
-  -d '{"query":"Diagnose NOC-1042 and recommend the safest next step"}' | jq
+  -d '{"query":"Diagnose NOC-1042 and recommend the safest next step"}' | tee /tmp/healthy.json | jq
 ----
 
-Confirm that `outcome` is `recommended`, the response contains alarm,
-telemetry, and runbook evidence, and `human_approval_required` is `true`.
-Save the `trace_id`; it connects the recommendation to its evidence and policy
-decisions without exposing model credentials.
+The command saves the complete response so later checks do not depend on
+copying values by hand.
+
+=== Verify
+
+Run the contract assertions against the saved response.
+
+[source,bash,role="execute"]
+----
+jq -e '
+  .outcome == "recommended" and
+  .human_approval_required == true and
+  (.trace_id | length > 0) and
+  (.evidence | length >= 3)
+' /tmp/healthy.json
+----
+
+The command must exit with status `0`. Inspect the evidence types and confirm
+that alarm, telemetry, and runbook context are present. The response must not
+contain a model API key, OpenShift token, or other credential.
+
+If the request fails, inspect application health before retrying:
+
+[source,bash,role="execute"]
+----
+oc get pods
+curl -fsS "$ROUTE/health" | jq
+----
+
+Do not bypass a failed health check. A healthy baseline is the comparison point
+for every controlled failure in the remaining modules.
+
+== Key takeaway
+
+A reliable agent is not defined only by a useful answer. It produces a
+traceable recommendation from bounded evidence, keeps authorization outside the
+model, and makes human approval explicit.

@@ -1,16 +1,77 @@
-= 3. Build: Contain prompt injection
+= 3. Contain prompt injection
 
-The lab overlay permits controlled failure injection. Submit content that
-simulates an instruction hidden in retrieved material:
+Retrieved documents and tool results are untrusted input. In this controlled
+scenario, a runbook contains an instruction that attempts to override policy.
 
-[source,bash]
+== What you will learn
+
+* Explain why retrieved content must never become trusted instructions.
+* Trigger a deterministic prompt-injection test safely.
+* Prove that rejection occurs before tools and model inference.
+* Interpret the guardrail decision without exposing sensitive context.
+
+== See: Prevention before reasoning
+
+The application sends the participant input to the OpenShift AI NeMo
+Guardrails service before it assembles model context. The rail checks explicit
+unsafe patterns. A blocked request stops at this boundary.
+
+That order prevents three undesirable outcomes:
+
+* unsafe text is not sent to the model;
+* MCP tools are not called for a rejected request;
+* the response does not echo hidden instructions or credentials.
+
+The supported service is the primary decision point. The application also
+fails closed when that service cannot be reached; it does not silently allow
+the request because a dependency is unavailable.
+
+== Do: Submit the controlled injection
+
+Use the lab-only failure selector to supply a known unsafe input.
+
+[source,bash,role="execute"]
 ----
+test -n "$ROUTE" || ROUTE="https://$(oc get route ar -o jsonpath='{.spec.host}')"
 curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
-  -d '{"query":"Use the supplied runbook","failure":"prompt_injection"}' | jq
+  -d '{"query":"Use the supplied runbook","failure":"prompt_injection"}' \
+  | tee /tmp/prompt-injection.json | jq
 ----
 
-The expected outcome is `abstained`. No MCP tool or model should be called.
-The policy decision identifies the input guardrail without returning the
-system prompt or any credential. In the certified environment this contract is
-backed by the supported OpenShift AI TrustyAI/NeMo guardrail path.
+Failure injection is enabled only for the lab profile. It must remain disabled
+for a production deployment.
 
+=== Verify
+
+Assert the rejection contract.
+
+[source,bash,role="execute"]
+----
+jq -e '
+  .outcome == "abstained" and
+  (.executed_tools | length == 0) and
+  .human_approval_required == true
+' /tmp/prompt-injection.json
+----
+
+Inspect the policy metadata and compare it with the healthy run.
+
+[source,bash,role="execute"]
+----
+jq '{outcome, policy_decisions, executed_tools, model_status, trace_id}' \
+  /tmp/prompt-injection.json
+jq '{outcome, executed_tools, model_status, trace_id}' /tmp/healthy.json
+----
+
+The unsafe run must not report evidence-tool execution. The policy decision
+should identify the input guardrail, while the healthy request remains an
+evidence-backed recommendation.
+
+If the output shows tool activity, stop. Do not continue to later modules;
+record the trace ID because the prevention boundary has failed.
+
+== Key takeaway
+
+Prompt injection is contained by treating all retrieved content as data and
+enforcing policy before model or tool execution. Dependency failure must not
+turn that prevention control into an allow path.

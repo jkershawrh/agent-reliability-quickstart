@@ -1,21 +1,90 @@
-= 6. Prove, recover, and take the pattern with you
+= 6. Prove, recover, and reuse the pattern
 
-Run the qualification suite:
+Individual checks are useful, but release evidence must run the same contracts
+repeatably. The qualification Pipeline turns the four journeys into one
+versioned scorecard and leaves a Kubernetes record for review.
 
-[source,bash]
+== What you will learn
+
+* Start the qualification Pipeline from the participant namespace.
+* Read a scorecard that covers healthy and degraded behavior.
+* Separate behavioral qualification from GitOps recovery.
+* Identify the reusable reliability artifact you can take to another domain.
+
+== See: Evidence and recovery are different
+
+The Pipeline tests the healthy, prompt-injection, unauthorized-tool, and
+inference-timeout contracts. Each task records a result; the scorecard combines
+those results without including credentials.
+
+GitOps owns recovery to the declared workload state. If a Deployment drifts,
+GitOps reconciles it. If agent semantics regress, the Pipeline exposes the
+regression. Neither mechanism substitutes for the other.
+
+The release proof therefore has two dimensions:
+
+* behavioral evidence shows that safety contracts pass;
+* reconciliation evidence shows that declared resources return to known state.
+
+Launchpad adds lifecycle proof: scoped credentials are revoked and all seat
+resources are removed when the environment is reclaimed.
+
+== Do: Run the qualification suite
+
+Create a PipelineRun from the versioned template, identify the new run, and
+wait for completion.
+
+[source,bash,role="execute"]
 ----
 oc create -f deploy/pipelines/pipelinerun.yaml
 RUN=$(oc get pipelinerun -o name --sort-by=.metadata.creationTimestamp | tail -1)
+echo "Qualification run: $RUN"
 oc wait --for=condition=Succeeded "$RUN" --timeout=10m
-oc get "$RUN" -o jsonpath='{.status.pipelineResults[?(@.name=="scorecard")].value.string}' | jq
 ----
 
-The scorecard must pass the healthy, prompt-injection, unauthorized-tool, and
-inference-timeout scenarios. Restore the safe baseline by synchronizing the
-GitOps application or applying `deploy/base`.
+Read and save the scorecard.
 
-Your take-away is `config/reliability-profile.yaml`: a versioned starting point
-for tool policy, evidence requirements, retries, and degraded behavior. Adapt
-the domain data and MCP tools, but keep failure injection disabled outside a
-controlled lab namespace.
+[source,bash,role="execute"]
+----
+oc get "$RUN" \
+  -o jsonpath='{.status.pipelineResults[?(@.name=="scorecard")].value.string}' \
+  | tee /tmp/reliability-scorecard.json | jq
+----
 
+=== Verify
+
+Confirm that all four named scenarios passed.
+
+[source,bash,role="execute"]
+----
+jq -e '
+  .healthy == "pass" and
+  .prompt_injection == "pass" and
+  .unauthorized_tool == "pass" and
+  .inference_timeout == "pass"
+' /tmp/reliability-scorecard.json
+----
+
+Inspect the Pipeline conditions if a check fails.
+
+[source,bash,role="execute"]
+----
+oc get "$RUN" -o jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{" "}{.reason}{"\n"}{end}'
+----
+
+Do not manually hide a failed task. Capture the run name, failing scenario,
+application trace ID, source revision, and image digest as defect evidence.
+
+Restore a changed workload only through the declared GitOps source. Do not
+patch production behavior from the participant terminal.
+
+The reusable artifact is `config/reliability-profile.yaml`. Adapt its domain
+data and MCP tools, but retain explicit tool policy, evidence requirements,
+bounded retries, safe degradation, and human approval. Keep failure injection
+disabled outside controlled lab namespaces.
+
+== Key takeaway
+
+Reliability becomes repeatable when expectations are executable, evidence is
+versioned, recovery has a declared owner, and lifecycle cleanup is proven. The
+pattern can move to another domain without giving the model authorization.
