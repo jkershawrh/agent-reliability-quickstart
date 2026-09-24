@@ -14,7 +14,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: mcp
-          image: quay.io/jkershawrh/agent-reliability-quickstart:latest
+          image: quay.io/rh-ee-jkershaw/agent-reliability-quickstart@sha256:ccb631bb51942c71ae02f167fb39dc6e0931d7624243890acafcdbd510a1d0ce
           command: [uvicorn, src.mcp:app, --host, 0.0.0.0, --port, "8080"]
           ports: [{name: http, containerPort: 8080}]
           resources:
@@ -32,4 +32,3 @@ metadata: {name: noc-evidence-mcp}
 spec:
   selector: {app.kubernetes.io/name: noc-evidence-mcp}
   ports: [{name: http, port: 8080, targetPort: http}]
-

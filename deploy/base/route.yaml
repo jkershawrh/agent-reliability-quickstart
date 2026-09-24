@@ -1,7 +1,9 @@
 apiVersion: route.openshift.io/v1
 kind: Route
-metadata: {name: agent-reliability}
+metadata:
+  name: agent-reliability
+  annotations:
+    haproxy.router.openshift.io/timeout: 90s
 spec:
   to: {kind: Service, name: agent-reliability}
   tls: {termination: edge, insecureEdgeTerminationPolicy: Redirect}
-

@@ -2,7 +2,7 @@ api_version: reliability.agentic.redhat.com/v1alpha1
 kind: AgentReliabilityProfile
 name: noc-lab-failure-injection
 retry:
-  timeout_seconds: 5
+  timeout_seconds: 30
   max_attempts: 2
   backoff_seconds: 0.1
 allowed_tools:
@@ -13,4 +13,3 @@ guardrail_mode: enforce
 required_evidence: [alarm, telemetry, runbook]
 degraded_message: Inference is temporarily unavailable. No diagnosis or action was produced; continue with the approved manual NOC runbook.
 lab_failure_injection: true
-
