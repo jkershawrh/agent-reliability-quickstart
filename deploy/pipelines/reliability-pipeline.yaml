@@ -14,7 +14,7 @@ spec:
         results: [{name: scorecard}]
         steps:
           - name: scenarios
-            image: registry.access.redhat.com/ubi9/python-312:latest
+            image: registry.access.redhat.com/ubi9/python-312@sha256:8b1b36418501692d863a68f7f31ae47f1f169b83f7cdcc84831ac002304af693
             env: [{name: BASE_URL, value: $(params.base-url)}]
             script: |
               #!/usr/bin/env python3
@@ -30,4 +30,3 @@ spec:
               scorecard = {"passed": all(r["passed"] for r in results), "scenarios": results}
               open("$(results.scorecard.path)", "w").write(json.dumps(scorecard))
               if not scorecard["passed"]: raise SystemExit(1)
-
