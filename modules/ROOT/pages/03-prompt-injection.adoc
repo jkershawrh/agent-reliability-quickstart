@@ -1,4 +1,5 @@
 = 3. Contain prompt injection
+:imagesdir: ../assets/images
 
 Retrieved documents and tool results are untrusted input. In this controlled
 scenario, a runbook contains an instruction that attempts to override policy.
@@ -25,6 +26,19 @@ That order prevents three undesirable outcomes:
 The supported service is the primary decision point. The application also
 fails closed when that service cannot be reached; it does not silently allow
 the request because a dependency is unavailable.
+
+image::failure-paths.svg[Three controlled failure paths showing abstained, denied, and degraded outcomes,width=100%]
+
+The important property is ordering. If the application called evidence tools
+or inference before screening the input, a later rejection would be too late to
+prevent disclosure or unwanted work. The response metadata lets you test that
+the prevention control ran first.
+
+This exercise uses an explicit phrase so the outcome is deterministic and easy
+to teach. Real attacks can be indirect, multilingual, obfuscated, distributed
+across retrieved documents, or tailored to a specific model. Passing this one
+case proves the application contract for this injected scenario—not universal
+prompt-injection resistance.
 
 == Do: Submit the controlled injection
 
@@ -70,8 +84,60 @@ evidence-backed recommendation.
 If the output shows tool activity, stop. Do not continue to later modules;
 record the trace ID because the prevention boundary has failed.
 
+== Compare red and green behavior
+
+The healthy request is the green control. The injected request is the red
+challenge. Compare the exact boundaries rather than only the final wording.
+
+[source,bash,role="execute"]
+----
+jq -n \
+  --slurpfile green /tmp/healthy.json \
+  --slurpfile red /tmp/prompt-injection.json \
+  '{
+    healthy: ($green[0] | {outcome, model_status, executed_tools, trace_id}),
+    injected: ($red[0] | {outcome, model_status, executed_tools, trace_id})
+  }'
+----
+
+[cols="2,2,2",options="header"]
+|===
+|Assertion |Healthy control |Injected challenge
+|Outcome |`recommended` |`abstained`
+|Evidence tools |Three read-only tools execute |No tools execute
+|Model |Available |Not called
+|Human approval |Required |Required
+|Trace |Unique ID |Different unique ID
+|===
+
+Inspect the guardrail provider in `policy_decisions`. A supported external
+decision should identify the OpenShift AI guardrail integration. If the service
+is unavailable in enforce mode, the local fallback denies rather than allowing
+clean-looking input through. That preserves safety but reduces availability;
+monitoring must distinguish the two providers.
+
+== Troubleshoot without bypassing policy
+
+If an apparently safe request abstains, inspect the policy decision and
+guardrail workload status. Do not disable enforce mode to make the exercise
+pass.
+
+[source,bash,role="execute"]
+----
+jq '.policy_decisions[] | select(.control == "input-guardrail")' \
+  /tmp/prompt-injection.json
+oc get nemoguardrails,service,pod 2>/dev/null || oc get service,pod
+----
+
+An unavailable dependency and an unsafe-input rejection can share an abstained
+outcome while requiring different operational responses. The provider and
+reason fields preserve that distinction.
+
 == Key takeaway
 
 Prompt injection is contained by treating all retrieved content as data and
 enforcing policy before model or tool execution. Dependency failure must not
 turn that prevention control into an allow path.
+
+[.next-nav]
+xref:04-tool-authorization.adoc[Deny an unauthorized tool ->]

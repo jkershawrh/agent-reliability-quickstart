@@ -1,4 +1,5 @@
 = 6. Prove, recover, and reuse the pattern
+:imagesdir: ../assets/images
 
 Individual checks are useful, but release evidence must run the same contracts
 repeatably. The qualification Pipeline turns the four journeys into one
@@ -29,14 +30,32 @@ The release proof therefore has two dimensions:
 Launchpad adds lifecycle proof: scoped credentials are revoked and all seat
 resources are removed when the environment is reclaimed.
 
+image::qualification-loop.svg[Loop from a versioned reliability profile through GitOps deployment and Pipeline qualification to scorecard review and correction,width=100%]
+
+The loop is intentionally source-driven. A failed qualification is not fixed by
+editing the scorecard or patching a running pod. The responsible team corrects
+the versioned policy or application, allows GitOps to reconcile the intended
+state, and reruns the same qualification. That produces an evidence chain from
+source revision to image digest, deployed state, PipelineRun, and scenario
+results.
+
 == Do: Run the qualification suite
 
-Create a PipelineRun from the versioned template, identify the new run, and
-wait for completion.
+Create a PipelineRun against the Pipeline already installed in your namespace,
+identify the new run, and wait for completion. The inline resource avoids
+assuming that the source repository exists in the learner terminal.
 
 [source,bash,role="execute"]
 ----
-oc create -f deploy/pipelines/pipelinerun.yaml
+oc create -f - <<'EOF'
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: agent-reliability-qualification-
+spec:
+  pipelineRef:
+    name: agent-reliability-qualification
+EOF
 RUN=$(oc get pipelinerun -o name --sort-by=.metadata.creationTimestamp | tail -1)
 echo "Qualification run: $RUN"
 oc wait --for=condition=Succeeded "$RUN" --timeout=10m
@@ -58,12 +77,36 @@ Confirm that all four named scenarios passed.
 [source,bash,role="execute"]
 ----
 jq -e '
-  .healthy == "pass" and
-  .prompt_injection == "pass" and
-  .unauthorized_tool == "pass" and
-  .inference_timeout == "pass"
+  .passed == true and
+  (.scenarios | length == 4) and
+  all(.scenarios[];
+    .passed == true and
+    .authorization_passed == true and
+    .evidence_complete == true)
 ' /tmp/reliability-scorecard.json
 ----
+
+Read the scorecard as more than four green labels. Each row records outcome,
+elapsed time, trace ID, model status, requested and executed tools, policy
+decisions, authorization, and evidence completeness.
+
+[source,bash,role="execute"]
+----
+jq -r '
+  .scenarios[] |
+  [.scenario, .outcome, .model_status,
+   (.executed_tools | join(",")),
+   (.authorization_passed | tostring),
+   (.evidence_complete | tostring),
+   (.elapsed_ms | tostring), .trace_id] | @tsv
+' /tmp/reliability-scorecard.json \
+  | column -t -s $'\t'
+----
+
+The healthy row requires complete evidence. The unauthorized row requires no
+executed action. The failure rows require their explicit abstained, denied, or
+degraded outcomes. Elapsed time is recorded for investigation, but one run is
+not a capacity benchmark.
 
 Inspect the Pipeline conditions if a check fails.
 
@@ -78,13 +121,61 @@ application trace ID, source revision, and image digest as defect evidence.
 Restore a changed workload only through the declared GitOps source. Do not
 patch production behavior from the participant terminal.
 
-The reusable artifact is `config/reliability-profile.yaml`. Adapt its domain
-data and MCP tools, but retain explicit tool policy, evidence requirements,
-bounded retries, safe degradation, and human approval. Keep failure injection
-disabled outside controlled lab namespaces.
+== Leave with a reliability review
+
+Package the active profile, Pipeline scorecard, image reference, and namespace
+into a credential-free evidence directory.
+
+[source,bash,role="execute"]
+----
+OUT="$HOME/agent-reliability-evidence"
+mkdir -p "$OUT"
+cp /tmp/reliability-profile.yaml "$OUT/AgentReliabilityProfile.yaml"
+cp /tmp/reliability-scorecard.json "$OUT/qualification-scorecard.json"
+oc get deployment agent-reliability \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}' \
+  > "$OUT/image-reference.txt"
+{
+  echo "namespace=$(oc project -q)"
+  echo "pipelinerun=$RUN"
+  echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "claim_boundary=educational reliability qualification; not autonomous production remediation"
+} > "$OUT/review.properties"
+find "$OUT" -maxdepth 1 -type f -print -exec sha256sum {} \;
+----
+
+The directory is the “leave with something” artifact. It records what was
+configured, what was deployed, what ran, and what passed. It intentionally does
+not include a model key, OpenShift token, raw Secret, or customer data.
+
+Review it for common secret markers before exporting it:
+
+[source,bash,role="execute"]
+----
+! grep -RniE 'authorization: bearer|api[_-]?key|password|token=' "$OUT"
+tar -czf "$HOME/agent-reliability-evidence.tgz" -C "$HOME" agent-reliability-evidence
+echo "Evidence package: $HOME/agent-reliability-evidence.tgz"
+----
+
+The reusable artifact is `AgentReliabilityProfile.yaml`. Adapt its domain data
+and MCP tools, but retain explicit tool policy, evidence requirements, bounded
+retries, safe degradation, and human approval. Keep failure injection disabled
+outside controlled lab namespaces.
+
+== Interpret a failed qualification
+
+A red scorecard is useful evidence, not an inconvenience to suppress. Capture
+the PipelineRun name, failing scenario, trace ID, source revision, and image
+digest. Determine whether the defect belongs to model access, policy,
+authorization, evidence, application behavior, or deployment state. Correct the
+owning layer and rerun the entire suite so a local fix does not regress another
+contract.
 
 == Key takeaway
 
 Reliability becomes repeatable when expectations are executable, evidence is
 versioned, recovery has a declared owner, and lifecycle cleanup is proven. The
 pattern can move to another domain without giving the model authorization.
+
+[.next-nav]
+xref:conclusion.adoc[Review the reliability journey ->]

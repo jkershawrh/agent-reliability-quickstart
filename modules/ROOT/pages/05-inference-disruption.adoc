@@ -24,6 +24,20 @@ Bounded retries matter at workshop scale. If every seat retries indefinitely,
 a transient model slowdown amplifies into additional load. A small, explicit
 budget prevents that positive feedback loop.
 
+The inference boundary occurs after the three read-only evidence tools. That
+ordering means a degraded response can preserve what was observed while making
+clear that no model-supported diagnosis was produced. Evidence gathering is
+not remediation, and it must not be confused with a completed diagnosis.
+
+[cols="2,2,3",options="header"]
+|===
+|State |What ran |What the user may be told
+|Healthy |Guardrail, evidence tools, model, validation |A sourced recommendation requiring approval
+|Inference degraded |Guardrail and evidence tools; model failed |Inference is unavailable; use the approved manual path
+|Unsafe input |Guardrail only |The request cannot be processed safely
+|Unauthorized action |Allowlist only |The requested capability is denied
+|===
+
 == Do: Trigger the controlled timeout
 
 Submit the lab-only inference disruption scenario.
@@ -51,7 +65,7 @@ Assert that the response reports degradation rather than success.
 jq -e '
   .outcome == "degraded" and
   .model_status == "unavailable" and
-  (.executed_tools | length == 0) and
+  (.executed_tools | sort == ["get_alarm","get_runbook","get_telemetry"]) and
   .human_approval_required == true
 ' /tmp/inference-timeout.json
 ----
@@ -78,8 +92,48 @@ curl -fsS "$ROUTE/health" | jq
 This distinction lets monitoring report application availability and inference
 dependency health separately.
 
+== Inspect what was preserved
+
+Verify that evidence exists but no recommendation claims a diagnosis or
+action. This is the difference between useful degradation and fabricated
+continuity.
+
+[source,bash,role="execute"]
+----
+jq '{
+  outcome,
+  evidence: [.evidence[] | {source, reference}],
+  executed_tools,
+  model_status,
+  recommendation,
+  policy_decisions,
+  elapsed_ms,
+  trace_id
+}' /tmp/inference-timeout.json
+----
+
+The injected scenario uses one simulated failed attempt so learners do not
+delay or load the shared Flightpath model. The production profile still defines
+the normal timeout and retry budget. Therefore the measured lab duration proves
+the response contract, not real endpoint recovery time or capacity.
+
+== Reason about retry amplification
+
+If 25 seats each issued one request with two attempts, one incident could create
+up to 50 model calls before any user retries. That simple multiplication is why
+timeouts, attempt limits, backoff, concurrency limits, and circuit breaking
+must be designed together. More retries can increase apparent resilience for
+one caller while worsening a shared outage for everyone.
+
+For this quickstart, the safe claim is bounded application behavior. A full
+capacity qualification must measure the intended model, hardware, seat count,
+success rate, latency distribution, queueing, and saturation independently.
+
 == Key takeaway
 
 Reliable degradation is a designed product behavior. Bounded retries, an
 explicit unavailable state, and a safe manual path protect correctness and
 shared capacity when inference cannot respond.
+
+[.next-nav]
+xref:06-prove-recover.adoc[Prove and recover the release ->]

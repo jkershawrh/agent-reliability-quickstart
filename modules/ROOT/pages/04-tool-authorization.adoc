@@ -71,8 +71,58 @@ informational; `no` is the expected proof of isolation.
 Compare the denied response with the healthy response. Evidence tools may run
 for the healthy diagnosis, while no tool runs for the unauthorized operation.
 
+== Trace intent versus authority
+
+The response should preserve the requested tool even though execution was
+denied. That is useful audit evidence: the system records intent without
+pretending that the action happened.
+
+[source,bash,role="execute"]
+----
+jq '{requested_tools, executed_tools, policy_decisions, model_status, trace_id}' \
+  /tmp/unauthorized-tool.json
+----
+
+Expect `delete_network_config` in `requested_tools`, an empty
+`executed_tools`, a tool-allowlist denial, and `not_called` model status. The
+request is rejected before evidence gathering and inference because no later
+reasoning can make a forbidden capability acceptable.
+
+[cols="2,3,3",options="header"]
+|===
+|Layer |Question |Expected result
+|Model |Can text request a repair? |Yes; text can express any intent
+|Application policy |Is the repair tool in the allowlist? |No; deterministic denial
+|OpenShift RBAC |Can the service account create a Deployment or read nodes? |No; independent platform denial
+|Human process |May an operator perform an approved action elsewhere? |Only through the authorized operational process
+|===
+
+== Explore the positive boundary
+
+Least privilege should not mean that every capability fails. Confirm that the
+same service account can perform the narrow discovery action required by the
+application while destructive permissions remain absent.
+
+[source,bash,role="execute"]
+----
+oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" get services -n "$NS"
+oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" create deployments -n "$NS"
+----
+
+The expected pair is `yes` followed by `no`. This positive-and-negative check
+is stronger than proving only denial: it shows the identity is usable for its
+declared purpose without receiving broad privilege.
+
+In a production integration, each write-capable tool would also need input
+validation, target scoping, approval context, idempotency, audit logging, and a
+rollback strategy. Keeping this lab read-only makes the authorization boundary
+unambiguous.
+
 == Key takeaway
 
 Tool availability is not tool authorization. A reliable agent combines a
 small application allowlist with least-privilege OpenShift identity and keeps
 the final operational decision with a human.
+
+[.next-nav]
+xref:05-inference-disruption.adoc[Degrade safely during inference disruption ->]

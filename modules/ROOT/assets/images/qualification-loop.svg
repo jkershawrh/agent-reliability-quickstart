@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">Qualification and recovery loop</title>
+  <desc id="desc">A versioned reliability profile drives deployment, behavioral pipeline evidence, review, and GitOps recovery to a known state.</desc>
+  <rect width="1200" height="600" fill="#f5f5f5"/>
+  <text x="70" y="65" font-family="sans-serif" font-size="34" font-weight="700" fill="#151515">From expectation to repeatable evidence</text>
+  <g font-family="sans-serif" text-anchor="middle">
+    <g fill="#fff" stroke="#0066cc" stroke-width="3"><rect x="70" y="180" width="220" height="120" rx="16"/><rect x="350" y="180" width="220" height="120" rx="16"/><rect x="630" y="180" width="220" height="120" rx="16"/><rect x="910" y="180" width="220" height="120" rx="16"/></g>
+    <g font-size="21" font-weight="700"><text x="180" y="225">Versioned</text><text x="180" y="254">reliability profile</text><text x="460" y="225">Known-good</text><text x="460" y="254">GitOps state</text><text x="740" y="225">Pipeline</text><text x="740" y="254">qualification</text><text x="1020" y="225">Scorecard</text><text x="1020" y="254">and review</text></g>
+    <g stroke="#ee0000" stroke-width="5" fill="none"><path d="M290 240h60"/><path d="M570 240h60"/><path d="M850 240h60"/><path d="M1020 300v125H460V300"/></g>
+    <g fill="#ee0000"><path d="M345 232l14 8-14 8z"/><path d="M625 232l14 8-14 8z"/><path d="M905 232l14 8-14 8z"/><path d="M452 307l8-14 8 14z"/></g>
+    <text x="740" y="465" font-size="20" font-weight="700">Review failure → correct source → reconcile → qualify again</text>
+    <text x="740" y="498" font-size="18" fill="#4f5255">Never patch around a failed safety contract</text>
+  </g>
+</svg>

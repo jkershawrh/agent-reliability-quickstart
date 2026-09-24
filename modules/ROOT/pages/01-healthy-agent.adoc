@@ -1,4 +1,5 @@
 = 1. Establish the healthy baseline
+:imagesdir: ../assets/images
 
 The first run establishes what a trustworthy recommendation looks like before
 you introduce failures. You are the NOC operator responsible for alarm
@@ -30,6 +31,26 @@ The request crosses four deliberately separate boundaries:
 This separation matters because a fluent model response is not authorization.
 OpenShift identity, application policy, and human review remain authoritative.
 
+The same response carries two kinds of information. The recommendation is
+probabilistic content intended for an operator. The decision metadata is the
+machine-checkable record of how the application handled the request.
+
+[cols="2,3",options="header"]
+|===
+|Response field |Reliability question answered
+|`outcome` |Did the service recommend, abstain, deny, or degrade?
+|`evidence` |Which alarm, telemetry, and runbook records support the answer?
+|`requested_tools` |What capability did the request ask the orchestrator to use?
+|`executed_tools` |Which tools actually ran after policy evaluation?
+|`policy_decisions` |Which deterministic controls allowed or denied progress?
+|`model_status` |Was inference available, unavailable, or never called?
+|`trace_id` |How can this request be correlated with later evidence?
+|`human_approval_required` |Can the recommendation become an action automatically?
+|===
+
+Do not evaluate the recommendation while ignoring its metadata. Reliability is
+the combination of useful content and a provable execution path.
+
 == Do: Run the healthy workflow
 
 Confirm that your terminal is already scoped to the seat namespace. Then find
@@ -38,6 +59,8 @@ the short application Route and submit the simulated NOC alarm.
 [source,bash,role="execute"]
 ----
 test -n "$(oc project -q)"
+NS="$(oc project -q)"
+echo "Seat namespace: $NS"
 ROUTE="https://$(oc get route ar -o jsonpath='{.spec.host}')"
 curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
   -d '{"query":"Diagnose NOC-1042 and recommend the safest next step"}' | tee /tmp/healthy.json | jq
@@ -45,6 +68,19 @@ curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
 
 The command saves the complete response so later checks do not depend on
 copying values by hand.
+
+Before interpreting it, inspect the deployed components and their readiness:
+
+[source,bash,role="execute"]
+----
+oc get deployment,pod,service,route
+oc get deployment agent-reliability \
+  -o custom-columns=NAME:.metadata.name,READY:.status.readyReplicas,IMAGE:.spec.template.spec.containers[0].image
+----
+
+You should find the advisor and the read-only NOC evidence MCP service. Record
+the immutable image reference shown by the Deployment. That reference connects
+the observed behavior to a deployable artifact rather than an ambiguous tag.
 
 === Verify
 
@@ -64,6 +100,29 @@ The command must exit with status `0`. Inspect the evidence types and confirm
 that alarm, telemetry, and runbook context are present. The response must not
 contain a model API key, OpenShift token, or other credential.
 
+Produce a compact trace that separates evidence sources from policy and model
+state:
+
+[source,bash,role="execute"]
+----
+jq '{
+  outcome,
+  evidence: [.evidence[] | {source, reference}],
+  requested_tools,
+  executed_tools,
+  policy_decisions,
+  model_status,
+  trace_id,
+  human_approval_required
+}' /tmp/healthy.json
+----
+
+The healthy path should execute the three read-only evidence tools and report
+the model as available. If the environment is configured to fail closed because
+an external guardrail is unavailable, the response can abstain before reaching
+this point. That is not a healthy baseline; capture the policy provider and ask
+the facilitator to restore the guardrail dependency.
+
 If the request fails, inspect application health before retrying:
 
 [source,bash,role="execute"]
@@ -75,8 +134,21 @@ curl -fsS "$ROUTE/health" | jq
 Do not bypass a failed health check. A healthy baseline is the comparison point
 for every controlled failure in the remaining modules.
 
+Save the trace ID separately. Later modules produce new trace IDs, allowing you
+to prove that each result belongs to a distinct request rather than a reused
+response.
+
+[source,bash,role="execute"]
+----
+jq -r '.trace_id' /tmp/healthy.json | tee /tmp/healthy-trace-id
+test -s /tmp/healthy-trace-id
+----
+
 == Key takeaway
 
 A reliable agent is not defined only by a useful answer. It produces a
 traceable recommendation from bounded evidence, keeps authorization outside the
 model, and makes human approval explicit.
+
+[.next-nav]
+xref:02-safety-architecture.adoc[Map the safety architecture ->]

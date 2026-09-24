@@ -1,4 +1,5 @@
 = 2. Understand the safety architecture
+:imagesdir: ../assets/images
 
 You now have a healthy result. This module shows why it can be trusted and
 which control owns each decision. The model proposes; it does not authorize.
@@ -29,6 +30,28 @@ The controls form a sequence, not a single opaque agent:
 
 GitOps cannot prove that prompt injection is contained. A passing behavioral
 test cannot reconcile a changed Deployment. Both controls are required.
+
+image::control-planes.svg[Four independent control planes for model behavior, application policy, OpenShift enforcement, and human governance,width=100%]
+
+Think of the architecture as a set of independent vetoes. A model may propose a
+tool, but the application allowlist can veto it. An application bug might issue
+a Kubernetes request, but RBAC can veto it. A technically permitted
+recommendation can still be rejected by an accountable operator. Independence
+is valuable because one compromised or mistaken layer does not automatically
+control every downstream decision.
+
+[cols="2,2,3",options="header"]
+|===
+|Threat or failure |Primary control |Independent evidence
+|Unsafe instruction |Input guardrail |Policy provider, decision, and model-not-called state
+|Unexpected tool request |Application allowlist |Requested-versus-executed tool lists
+|Platform privilege attempt |Service account and RBAC |`oc auth can-i` denial
+|Unsupported conclusion |Required-evidence policy |Named evidence sources or abstention
+|Slow/unavailable model |Timeout, retry, and degraded message |Attempt decisions and model status
+|Deployment drift |OpenShift GitOps |Application sync and health state
+|Behavioral regression |OpenShift Pipelines |Versioned scenario scorecard
+|Operational action |Human approval |Explicit approval-required field and operating process
+|===
 
 == Do: Inspect the active policy
 
@@ -73,8 +96,44 @@ must return `no`.
 The profile is configuration rather than prompt text. Operators can review and
 version it without relying on hidden model instructions.
 
+Read the profile as an operational contract. `timeout_seconds` limits one
+inference attempt, `max_attempts` bounds amplification, and `backoff_seconds`
+spaces retries. `allowed_tools` and `required_evidence` are intentionally
+different: permission to call a tool does not prove that the returned evidence
+is sufficient. `degraded_message` defines what the user sees when the model
+cannot support a recommendation.
+
+Confirm failure injection is visible and scoped to this lab profile:
+
+[source,bash,role="execute"]
+----
+grep -E 'lab_failure_injection|timeout_seconds|max_attempts|backoff_seconds' \
+  /tmp/reliability-profile.yaml
+curl -fsS "$ROUTE/health" | jq '{status, profile, failure_injection}'
+----
+
+The health response should identify the active profile and report failure
+injection as enabled for this controlled experience. The default reusable
+profile keeps it disabled. A lab switch is not a production chaos mechanism.
+
+== Interpret the trust boundaries
+
+The model API credential is supplied to the workload as runtime configuration;
+it is not a Showroom variable and must not appear in learner output. The MCP
+server exposes fictional, read-only evidence. The browser receives structured
+results but does not receive the model credential. The service account governs
+OpenShift API access regardless of what text the model emits.
+
+This architecture reduces blast radius, but it does not prove confidentiality
+or compliance. A production review must also examine egress, logging, data
+retention, token rotation, tenancy, model-provider handling, and incident
+response.
+
 == Key takeaway
 
 Reliable agentic systems use independently testable controls. Model behavior is
 one layer; policy, identity, evidence validation, GitOps, pipelines, and human
 approval remain separate enforcement boundaries.
+
+[.next-nav]
+xref:03-prompt-injection.adoc[Contain prompt injection ->]

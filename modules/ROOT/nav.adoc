@@ -5,4 +5,4 @@
 * xref:04-tool-authorization.adoc[4. Build: Tool Authorization]
 * xref:05-inference-disruption.adoc[5. Build: Inference Disruption]
 * xref:06-prove-recover.adoc[6. Prove and Recover]
-
+* xref:conclusion.adoc[Review and Next Steps]

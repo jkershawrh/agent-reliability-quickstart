@@ -1,26 +1,90 @@
 = When Agents Fail: Reliable Agentic AI on OpenShift
 :page-duration: 75 minutes
+:imagesdir: ../assets/images
 
-In this Red Hat and Intel quickstart, you operate a NOC incident advisor on
-Red Hat OpenShift with CPU inference on Intel Xeon. You will first see a
-healthy, evidence-grounded recommendation. Then you will deliberately trigger
-three failures and prove that the system fails safely.
+== The incident begins
+
+Packet loss has crossed the operating threshold for cell group `west-7`. The
+NOC needs a diagnosis, but the evidence is spread across alarm, telemetry, and
+runbook systems. An AI advisor can assemble that context and recommend a next
+step—but only if the surrounding platform prevents the model from becoming an
+uncontrolled operator.
+
+In this Red Hat and Intel experience, you are the platform reliability engineer
+responsible for qualifying that advisor. You will first establish a healthy,
+evidence-grounded request. Then you will deliberately introduce prompt
+injection, an unauthorized tool request, and inference disruption. Each failure
+must stop at the correct boundary and produce an explicit, reviewable outcome.
+
+The final task converts those expectations into a repeatable OpenShift Pipeline
+scorecard and an exportable reliability profile. You leave with a pattern that
+can be adapted to another evidence-driven domain without granting a language
+model operational authority.
+
+image::reliability-architecture.svg[Agent reliability request path on Red Hat OpenShift from input guardrails through evidence tools and CPU inference to human approval,width=100%]
 
 == What you will learn
 
-* Separate model reasoning from authorization.
-* Protect model input with OpenShift AI guardrails.
-* constrain MCP tools with an application allowlist and OpenShift identity.
-* Degrade safely when inference is unavailable.
-* Turn reliability expectations into a repeatable OpenShift Pipeline.
+By completing the full journey, you will be able to:
 
-The advisor is read-only. Every recommendation requires human approval. This
-lab does not perform autonomous remediation.
+* trace a request across guardrails, MCP tools, inference, evidence validation,
+  and human approval;
+* separate model reasoning from application authorization and OpenShift RBAC;
+* explain why retrieved content and tool output remain untrusted data;
+* recognize an honest degraded response when inference is unavailable;
+* use trace IDs, policy decisions, requested tools, executed tools, and model
+  status as reliability evidence;
+* distinguish behavioral qualification from GitOps reconciliation; and
+* export a versioned reliability profile and release-gap assessment.
+
+== Your journey
+
+[cols="1,2,3",options="header"]
+|===
+|Stage |Question |Evidence
+|Show |What does a healthy agent response look like? |Sourced recommendation, tool trace, model status, and approval boundary
+|Tell |Which control owns each decision? |Reliability profile, service account, RBAC checks, and trust-boundary map
+|Build 1 |Can malicious instructions bypass the guardrail? |Abstention before tools or inference
+|Build 2 |Can model intent grant an unauthorized action? |Allowlist denial plus independent OpenShift RBAC denial
+|Build 3 |Can model failure become a fabricated success? |Bounded failure with evidence preserved and safe manual direction
+|Prove |Can all contracts be rerun consistently? |Tekton scorecard, GitOps ownership, and exported profile review
+|===
 
 == Product roles
 
-OpenShift runs and isolates the application. OpenShift AI manages the supported
-TrustyAI/NeMo guardrail service. OpenShift Pipelines proves behavior and
-OpenShift GitOps restores the known-good state. The existing Flightpath MaaS
-gateway supplies tenant-scoped CPU inference on Intel Xeon; this quickstart
-does not deploy a duplicate model server.
+*Red Hat OpenShift* runs and isolates the UI, orchestrator, MCP evidence server,
+service identity, networking, and health surfaces. *Red Hat OpenShift AI*
+provides the supported TrustyAI/NeMo guardrail integration. *Red Hat OpenShift
+Pipelines* turns reliability expectations into executable release evidence.
+*Red Hat OpenShift GitOps* owns restoration to the declared workload state.
+The existing Flightpath gateway supplies tenant-scoped CPU inference on *Intel
+Xeon*; the quickstart does not deploy a duplicate model server.
+
+Each product has a distinct job. Guardrails do not replace RBAC. RBAC does not
+prove answer quality. GitOps does not prove behavioral safety. A Pipeline does
+not repair configuration drift. The lab is structured so you can inspect those
+seams rather than treating “the agent” as one opaque component.
+
+== Prerequisites and safety boundary
+
+Launchpad provides a browser terminal already authenticated to your assigned
+OpenShift namespace. You need basic familiarity with `oc`, `curl`, JSON, and
+Kubernetes resources. The NOC alarm, telemetry, runbooks, and failure scenarios
+are simulated and contain no customer network data.
+
+The advisor is read-only. Every recommendation requires human approval. Failure
+injection is enabled only in the controlled lab profile and must remain disabled
+in a normal deployment. Do not paste credentials, customer data, or production
+incident details into the interface.
+
+The qualification demonstrates application contracts; it does not certify a
+production NOC, universal prompt-injection resistance, model accuracy, or
+autonomous remediation.
+
+== Estimated time
+
+75–90 minutes. Complete the modules in order so each failure can be compared
+with the healthy baseline.
+
+[.next-nav]
+xref:01-healthy-agent.adoc[Establish the healthy baseline ->]

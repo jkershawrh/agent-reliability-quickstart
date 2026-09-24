@@ -1,0 +1,77 @@
+= Review and Next Steps
+:navtitle: Conclusion
+
+== You qualified a reliability pattern
+
+You began with a NOC alarm and ended with evidence that the agent behaves
+differently—and explicitly—under four conditions:
+
+* a healthy request returns a sourced recommendation that still requires human approval;
+* prompt injection produces abstention before tools or inference;
+* an unauthorized action is denied by application policy and remains blocked by OpenShift identity; and
+* inference disruption produces a degraded response instead of a fabricated diagnosis.
+
+You then ran those expectations as a Pipeline, connected behavioral proof to
+GitOps recovery ownership, and exported a reusable reliability review.
+
+== The pattern you can reuse
+
+The reusable architecture is not tied to telecommunications. Another domain
+can replace the alarm, telemetry, and runbook tools while retaining the same
+control contract:
+
+. screen untrusted input before reasoning;
+. expose only named, least-privilege tools;
+. preserve independent platform authorization;
+. require evidence before a recommendation;
+. bound remote inference with timeouts and retries;
+. return explicit abstained, denied, and degraded states;
+. attach traceable decision metadata; and
+. keep consequential action behind accountable human approval.
+
+The exported `AgentReliabilityProfile` captures the configurable portion of
+that contract. The qualification scorecard proves the deployed behavior at one
+revision. Both are needed: configuration without evidence is an intention, and
+evidence without versioned expectations is difficult to reproduce.
+
+== What remains before production
+
+This lab does not prove that a model can diagnose a live network safely. A
+production program still needs representative incident evaluation, adversarial
+testing beyond one injected phrase, identity and network-policy review, durable
+tracing, privacy and retention controls, capacity testing, model and prompt
+change management, rollback exercises, human-factors testing, and named owners
+for incident response and approval.
+
+Reliability is also temporal. A passing release can regress when a model,
+prompt, tool, policy, image, or platform component changes. Treat the Pipeline
+as a release gate and recurring check, not a one-time certificate.
+
+== Questions for the design review
+
+Bring five questions to the next architecture review:
+
+. Which decisions must remain deterministic even when model quality improves?
+. Which evidence sources can be trusted, and how is their provenance verified?
+. What is the maximum authority available to each service identity and tool?
+. Which unavailable or uncertain states must cause abstention or degradation?
+. What release evidence is required after a model, prompt, tool, policy, or
+  platform change?
+
+These questions keep the discussion centered on observable controls instead of
+model fluency. They also make ownership visible: application teams own policy
+and response contracts, platform teams own isolation and identity, AI teams own
+model and guardrail qualification, domain operators own approval criteria, and
+security and governance teams define acceptable risk and audit evidence.
+
+== Recommended next steps
+
+Review the generated profile assessment with platform, security, AI, and domain
+owners. Replace simulated tools only after defining their authorization and
+evidence contracts. Add domain-specific failure cases before increasing tool
+privilege. Finally, qualify the intended Launchpad seat count and preserve the
+image digests, source revision, PipelineRun, and scorecard as release evidence.
+
+The durable lesson is simple: a useful agent recommends; a reliable system
+proves why that recommendation was allowed, what it used, and what happens when
+any dependency fails.
