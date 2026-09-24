@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-reliability-profile
+data:
+  reliability-profile.yaml: |
+    api_version: reliability.agentic.redhat.com/v1alpha1
+    kind: AgentReliabilityProfile
+    name: noc-safe-default
+    retry: {timeout_seconds: 30, max_attempts: 2, backoff_seconds: 0.25}
+    allowed_tools: [get_alarm, get_telemetry, get_runbook]
+    guardrail_mode: enforce
+    required_evidence: [alarm, telemetry, runbook]
+    degraded_message: Inference is temporarily unavailable. No diagnosis or action was produced; continue with the approved manual NOC runbook.
+    lab_failure_injection: false
+

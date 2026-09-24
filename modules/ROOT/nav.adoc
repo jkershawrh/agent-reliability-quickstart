@@ -1,0 +1,8 @@
+* xref:index.adoc[Start]
+* xref:01-healthy-agent.adoc[1. Show: Healthy Agent]
+* xref:02-safety-architecture.adoc[2. Tell: Safety Architecture]
+* xref:03-prompt-injection.adoc[3. Build: Prompt Injection]
+* xref:04-tool-authorization.adoc[4. Build: Tool Authorization]
+* xref:05-inference-disruption.adoc[5. Build: Inference Disruption]
+* xref:06-prove-recover.adoc[6. Prove and Recover]
+

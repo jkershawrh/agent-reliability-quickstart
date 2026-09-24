@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-reliability
+  labels: {app.kubernetes.io/name: agent-reliability}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: agent-reliability}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: agent-reliability}
+    spec:
+      serviceAccountName: agent-reliability
+      automountServiceAccountToken: false
+      containers:
+        - name: api
+          image: quay.io/jkershawrh/agent-reliability-quickstart:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: RELIABILITY_PROFILE, value: /etc/reliability/reliability-profile.yaml}
+            - {name: MODEL_ENDPOINT, valueFrom: {secretKeyRef: {name: model-connection, key: endpoint}}}
+            - {name: MODEL_NAME, valueFrom: {secretKeyRef: {name: model-connection, key: model}}}
+            - {name: MODEL_API_KEY, valueFrom: {secretKeyRef: {name: model-connection, key: api-key}}}
+            - {name: MCP_URL, value: "http://noc-evidence-mcp:8080"}
+          ports: [{name: http, containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 3}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+          volumeMounts: [{name: profile, mountPath: /etc/reliability, readOnly: true}]
+      volumes: [{name: profile, configMap: {name: agent-reliability-profile}}]

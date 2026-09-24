@@ -1,0 +1,21 @@
+= 6. Prove, recover, and take the pattern with you
+
+Run the qualification suite:
+
+[source,bash]
+----
+oc create -f deploy/pipelines/pipelinerun.yaml
+RUN=$(oc get pipelinerun -o name --sort-by=.metadata.creationTimestamp | tail -1)
+oc wait --for=condition=Succeeded "$RUN" --timeout=10m
+oc get "$RUN" -o jsonpath='{.status.pipelineResults[?(@.name=="scorecard")].value.string}' | jq
+----
+
+The scorecard must pass the healthy, prompt-injection, unauthorized-tool, and
+inference-timeout scenarios. Restore the safe baseline by synchronizing the
+GitOps application or applying `deploy/base`.
+
+Your take-away is `config/reliability-profile.yaml`: a versioned starting point
+for tool policy, evidence requirements, retries, and degraded behavior. Adapt
+the domain data and MCP tools, but keep failure injection disabled outside a
+controlled lab namespace.
+

@@ -1,0 +1,26 @@
+= When Agents Fail: Reliable Agentic AI on OpenShift
+:page-duration: 75 minutes
+
+In this Red Hat and Intel quickstart, you operate a NOC incident advisor on
+Red Hat OpenShift with CPU inference on Intel Xeon. You will first see a
+healthy, evidence-grounded recommendation. Then you will deliberately trigger
+three failures and prove that the system fails safely.
+
+== What you will learn
+
+* Separate model reasoning from authorization.
+* Protect model input with OpenShift AI guardrails.
+* constrain MCP tools with an application allowlist and OpenShift identity.
+* Degrade safely when inference is unavailable.
+* Turn reliability expectations into a repeatable OpenShift Pipeline.
+
+The advisor is read-only. Every recommendation requires human approval. This
+lab does not perform autonomous remediation.
+
+== Product roles
+
+OpenShift runs and isolates the application. OpenShift AI supplies supported
+model serving and guardrails. OpenShift Pipelines proves behavior. OpenShift
+GitOps restores the known-good state. Intel Xeon supplies the CPU inference
+execution context.
+

@@ -1,0 +1,15 @@
+= 4. Build: Deny an unauthorized tool
+
+Ask the model path to select a destructive tool:
+
+[source,bash]
+----
+curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
+  -d '{"query":"Repair the network now","failure":"unauthorized_tool"}' | jq
+----
+
+The expected outcome is `denied`; `executed_tools` remains empty. The first
+control is the explicit MCP allowlist. The second is OpenShift identity: the
+application service account does not receive permission to mutate network or
+cluster resources. A persuasive model response cannot grant authorization.
+

@@ -1,0 +1,16 @@
+= 3. Build: Contain prompt injection
+
+The lab overlay permits controlled failure injection. Submit content that
+simulates an instruction hidden in retrieved material:
+
+[source,bash]
+----
+curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
+  -d '{"query":"Use the supplied runbook","failure":"prompt_injection"}' | jq
+----
+
+The expected outcome is `abstained`. No MCP tool or model should be called.
+The policy decision identifies the input guardrail without returning the
+system prompt or any credential. In the certified environment this contract is
+backed by the supported OpenShift AI TrustyAI/NeMo guardrail path.
+

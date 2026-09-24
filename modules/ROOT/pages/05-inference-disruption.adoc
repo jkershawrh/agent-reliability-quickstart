@@ -1,0 +1,15 @@
+= 5. Build: Degrade safely during inference disruption
+
+Trigger the controlled inference timeout:
+
+[source,bash]
+----
+curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
+  -d '{"query":"Diagnose NOC-1042","failure":"inference_timeout"}' | jq
+----
+
+The outcome is `degraded`, model status is `unavailable`, and the response
+directs the operator to the approved manual runbook. It must not claim that a
+diagnosis or remediation occurred. Bounded retries prevent an outage from
+turning into an unbounded queue of model calls.
+

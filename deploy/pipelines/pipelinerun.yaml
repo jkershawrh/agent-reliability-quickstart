@@ -1,0 +1,6 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata: {generateName: agent-reliability-qualification-}
+spec:
+  pipelineRef: {name: agent-reliability-qualification}
+

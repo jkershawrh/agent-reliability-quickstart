@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: agent-reliability
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jkershawrh/agent-reliability-quickstart.git
+    targetRevision: main
+    path: deploy/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: agent-reliability
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true]
+

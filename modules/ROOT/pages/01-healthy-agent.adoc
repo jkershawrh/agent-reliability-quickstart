@@ -1,0 +1,16 @@
+= 1. Show: Establish the healthy baseline
+
+Send the simulated NOC alarm to the advisor:
+
+[source,bash]
+----
+ROUTE="https://$(oc get route agent-reliability -o jsonpath='{.spec.host}')"
+curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
+  -d '{"query":"Diagnose NOC-1042 and recommend the safest next step"}' | jq
+----
+
+Confirm that `outcome` is `recommended`, the response contains alarm,
+telemetry, and runbook evidence, and `human_approval_required` is `true`.
+Save the `trace_id`; it connects the recommendation to its evidence and policy
+decisions without exposing model credentials.
+

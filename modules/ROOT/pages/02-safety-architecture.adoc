@@ -1,0 +1,19 @@
+= 2. Tell: Understand the safety architecture
+
+The model proposes; it does not authorize. The orchestrator accepts only MCP
+tools named in the reliability profile. The service account and OpenShift RBAC
+remain an independent enforcement boundary. Input guardrails run before tools
+or inference, and evidence validation runs before a recommendation is returned.
+
+GitOps owns the deployable known-good state. Pipelines tests behavior against
+that state. These are different controls: reconciliation cannot prove semantic
+behavior, and a successful test cannot correct configuration drift.
+
+Inspect the active profile:
+
+[source,bash]
+----
+oc get configmap agent-reliability-profile \
+  -o jsonpath='{.data.reliability-profile\.yaml}'
+----
+
