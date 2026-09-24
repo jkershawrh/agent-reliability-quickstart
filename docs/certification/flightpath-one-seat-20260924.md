@@ -44,6 +44,20 @@ inference completed in 13,827.77 ms. The fresh seat key returned HTTP 200 and a
 missing key returned HTTP 401. Final reclaim recorded provider-confirmed key
 revocation, cleared the persisted key, and deleted the second tenant namespace.
 
+## Five-seat qualification
+
+Workshop `59db3cb0-e480-42e1-bc51-84b92dc518eb` provisioned five isolated seats
+from the same immutable release. All 15 application, MCP, and Showroom
+deployments became available. The five model keys had five distinct hashes;
+every application service account was denied direct Secret reads. Each issued
+key returned HTTP 200 and every unauthenticated request returned HTTP 401.
+
+Five qualification PipelineRuns executed concurrently and all passed the
+healthy, prompt-injection, unauthorized-tool, and inference-timeout scenarios.
+Healthy CPU inference times were 14,667.79, 14,679.99, 14,665.66, 14,781.40,
+and 14,710.77 ms. Workshop reclaim produced five provider-confirmed revocation
+receipts, cleared every persisted key, and deleted all five tenant namespaces.
+
 ## Findings corrected
 
 1. The canary namespace required the standard
@@ -69,4 +83,4 @@ revocation, cleared the persisted key, and deleted the second tenant namespace.
   that external policy decision in the response contract.
 - Prove a RHOAI-managed CPU model-serving path or revise the catalog claim to
   describe the current Flightpath gateway accurately.
-- Run five-seat and 25-seat capacity and tenant-isolation tests.
+- Run the 25-seat capacity and tenant-isolation test.
