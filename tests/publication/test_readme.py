@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -64,3 +65,13 @@ def test_showroom_workspaces_are_part_of_the_journey():
     workspace = Path("src/main.py").read_text()
     for state in ("1 · Healthy", "2 · Abstain", "3 · Deny", "4 · Degrade"):
         assert state in workspace
+
+
+def test_execute_blocks_do_not_contain_guide_prose():
+    for page in Path("modules/ROOT/pages").glob("*.adoc"):
+        for block in re.findall(
+            r'\[source,(?:bash|sh),role="execute"[^\]]*\]\n----\n(.*?)\n----',
+            page.read_text(),
+            re.DOTALL,
+        ):
+            assert not re.search(r"^(?:Open|Return|The) \*?", block, re.MULTILINE), page

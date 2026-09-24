@@ -65,15 +65,15 @@ Read and save the scorecard.
 
 [source,bash,role="execute"]
 ----
+oc get "$RUN" \
+  -o jsonpath='{.status.pipelineResults[?(@.name=="scorecard")].value.string}' \
+  | tee /tmp/reliability-scorecard.json | jq
+----
 
 Open *OpenShift Console* and navigate to *Pipelines → PipelineRuns*. Select the
 run named by `$RUN`. Review its status, task, duration, and logs before returning
 to Terminal for the machine assertion. The Console provides the operational
 timeline; the JSON scorecard provides the portable contract evidence.
-oc get "$RUN" \
-  -o jsonpath='{.status.pipelineResults[?(@.name=="scorecard")].value.string}' \
-  | tee /tmp/reliability-scorecard.json | jq
-----
 
 === Verify
 
