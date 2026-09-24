@@ -8,6 +8,5 @@ content:
       start_path: .
 ui:
   bundle:
-    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/v0.0.2/ui-bundle.zip
+    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/patternfly-6/ui-bundle.zip
     snapshot: true
-
