@@ -58,6 +58,21 @@ Healthy CPU inference times were 14,667.79, 14,679.99, 14,665.66, 14,781.40,
 and 14,710.77 ms. Workshop reclaim produced five provider-confirmed revocation
 receipts, cleared every persisted key, and deleted all five tenant namespaces.
 
+## Twenty-five-seat qualification
+
+Workshop `fd42dc9f-7773-4f4f-b7b5-52fd2892f881` provisioned 25 seats in
+controlled waves of five. All seats reached ready with healthy application,
+MCP, and Showroom deployments. The workshop contained 25 runtime Secrets with
+25 distinct key hashes.
+
+Twenty-five qualification PipelineRuns executed concurrently. All 25
+scorecards passed and all 100 scenario checks produced the expected outcomes.
+Healthy CPU inference measured 16,010.88–18,391.55 ms, with p50 16,921.56 ms
+and p95 17,212.46 ms. This supports the lab's functional capacity claim without
+making a sub-second latency claim. Bulk reclaim cleared all 25 persisted keys,
+recorded 25 provider-confirmed revocation receipts, and deleted all 25 tenant
+namespaces.
+
 ## Findings corrected
 
 1. The canary namespace required the standard
@@ -83,4 +98,6 @@ receipts, cleared every persisted key, and deleted all five tenant namespaces.
   that external policy decision in the response contract.
 - Prove a RHOAI-managed CPU model-serving path or revise the catalog claim to
   describe the current Flightpath gateway accurately.
-- Run the 25-seat capacity and tenant-isolation test.
+
+The Launchpad lifecycle, capacity, isolation, and cleanup path has no remaining
+qualification gate through 25 seats.
