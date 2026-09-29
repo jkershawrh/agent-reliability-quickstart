@@ -1,0 +1,25 @@
+{
+  "schema_version": "demo-story.redhat-intel.com/external-launchpad-certification-reference/v1",
+  "candidate": "agent-reliability-quickstart",
+  "authority": "existing Launchpad qualification report; not factory authority",
+  "evidence_document": "docs/certification/flightpath-one-seat-20260924.md",
+  "evidence_document_sha256": "984c89fc30ea13d4875e44496a97a2467b104d01d3040b2bb9b32ee23c676f32",
+  "qualified_source_revision": "66638c95db0f8a56f80646086e1b639ce4625d1e",
+  "qualified_image": "quay.io/rh-ee-jkershaw/agent-reliability-quickstart@sha256:7aff969774fa4b3efac77de4525a046a9c36ce8609de77af20f1077ad17a79d1",
+  "maximum_qualified_seats": 25,
+  "qualification_summary": {
+    "one_seat": "PASS",
+    "five_seat": "PASS",
+    "twenty_five_seat": "PASS",
+    "reclaim": "PASS",
+    "zero_residue": "PASS"
+  },
+  "factory_authority": {
+    "orderable": false,
+    "certified": false,
+    "promotion_eligible": false,
+    "max_workshop_seats": 0
+  },
+  "canonical_handoff_status": "BLOCKED_MISSING_PRESENTATION_ARTIFACT",
+  "presentation_gap": "The qualified Containerfile copies only requirements, src, and config. It does not package the source-owned Showroom content or another presentation application."
+}
