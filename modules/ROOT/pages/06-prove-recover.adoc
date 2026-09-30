@@ -70,10 +70,25 @@ oc get "$RUN" \
   | tee /tmp/reliability-scorecard.json | jq
 ----
 
+=== Console checkpoint: Qualification run
+
 Open *OpenShift Console* and navigate to *Pipelines → PipelineRuns*. Select the
-run named by `$RUN`. Review its status, task, duration, and logs before returning
-to Terminal for the machine assertion. The Console provides the operational
-timeline; the JSON scorecard provides the portable contract evidence.
+run named by `$RUN`. Record its status, task, duration, and completion time, and
+inspect the task log before returning to Terminal.
+
+Confirm the Console run name and successful status match the PipelineRun that
+Terminal selected:
+
+[source,bash,role="execute"]
+----
+oc get "$RUN" \
+  -o custom-columns=NAME:.metadata.name,SUCCEEDED:.status.conditions[0].status,REASON:.status.conditions[0].reason,DURATION:.status.completionTime
+----
+
+The Console provides the operational timeline, the Terminal command identifies
+the exact Kubernetes record, and the JSON scorecard below provides portable
+contract evidence. Treat the qualification as proven only when all three refer
+to the same PipelineRun.
 
 === Verify
 
@@ -175,6 +190,22 @@ digest. Determine whether the defect belongs to model access, policy,
 authorization, evidence, application behavior, or deployment state. Correct the
 owning layer and rerun the entire suite so a local fix does not regress another
 contract.
+
+== Retain the proof until Launchpad reclaims the seat
+
+Do not delete the PipelineRun or the installed Pipeline during the active lab.
+The PipelineRun is the namespace-local audit record that connects the Console
+timeline, Terminal output, exported scorecard, source revision, and image
+digest. Retaining it until the seat ends lets an instructor investigate a red
+run and lets you verify the exported package against the live record.
+
+Export `agent-reliability-evidence.tgz` before the lab expires. When the seat
+TTL expires or an authorized operator reclaims it, Launchpad revokes the scoped
+model credential and removes the complete seat namespace, including the
+PipelineRun, Pipeline, application workloads, Route, ConfigMaps, and Secrets.
+That platform-owned reclaim is the cleanup boundary for this pre-provisioned
+environment; learners should not delete the shared baseline resources. The
+exported, credential-free archive is the evidence you retain after reclaim.
 
 == Key takeaway
 

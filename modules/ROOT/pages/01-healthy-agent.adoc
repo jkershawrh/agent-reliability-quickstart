@@ -90,10 +90,19 @@ You should find the advisor and the read-only NOC evidence MCP service. Record
 the immutable image reference shown by the Deployment. That reference connects
 the observed behavior to a deployable artifact rather than an ambiguous tag.
 
+=== Console checkpoint: Healthy workload
+
 Open *OpenShift Console* and navigate to *Workloads → Deployments* in your
-project. Locate `agent-reliability` and `noc-evidence-mcp`. Confirm both are
-available, then return to the guide. This establishes the platform view you
-will revisit during disruption and qualification.
+project. Locate `agent-reliability` and `noc-evidence-mcp`. Record the available
+replica count for both Deployments and the immutable image reference for
+`agent-reliability`.
+
+Compare the Console values with the Terminal output above. Both views must show
+the same two available workloads, and the image digest in Console must match the
+image reported by Terminal. If either view disagrees, capture both observations
+and stop; the healthy baseline is not established. This checkpoint connects the
+visual platform state to the command-line evidence you will revisit during
+disruption and qualification.
 
 === Verify
 

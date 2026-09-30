@@ -98,10 +98,18 @@ curl -fsS "$ROUTE/health" | jq
 This distinction lets monitoring report application availability and inference
 dependency health separately.
 
-Open *OpenShift Console* and confirm the advisor Deployment remains available.
-The injected timeout changes one request path; it does not crash or scale the
-shared application or model. Return to Advisor and verify the degraded result
-is still explicit despite the healthy workload.
+=== Console checkpoint: Degraded dependency
+
+Open *OpenShift Console* and inspect the `agent-reliability` Deployment. Confirm
+its available replica count remains unchanged and that the current pod is
+healthy. Compare that platform observation with the Terminal health response
+above and the `degraded` outcome in `/tmp/inference-timeout.json`.
+
+The three views should agree: OpenShift still has a healthy workload, the
+health endpoint still responds, and the individual request reports inference
+as unavailable. The injected timeout changes one request path; it does not
+crash or scale the shared application or model. Return to *Reliability Advisor*
+and verify the degraded result remains explicit despite the healthy workload.
 
 == Inspect what was preserved
 

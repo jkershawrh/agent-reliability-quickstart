@@ -67,6 +67,44 @@ def test_showroom_workspaces_are_part_of_the_journey():
         assert state in workspace
 
 
+def test_console_checkpoints_corroborate_terminal_and_pipeline_evidence():
+    pages = Path("modules/ROOT/pages")
+    checkpoints = {
+        "01-healthy-agent.adoc": (
+            "=== Console checkpoint: Healthy workload",
+            "Terminal output",
+        ),
+        "02-safety-architecture.adoc": (
+            "=== Console checkpoint: Trust boundary",
+            "Terminal authorization checks",
+        ),
+        "05-inference-disruption.adoc": (
+            "=== Console checkpoint: Degraded dependency",
+            "Terminal health response",
+        ),
+        "06-prove-recover.adoc": (
+            "=== Console checkpoint: Qualification run",
+            "JSON scorecard",
+        ),
+    }
+
+    for name, required_phrases in checkpoints.items():
+        content = (pages / name).read_text()
+        for phrase in required_phrases:
+            assert phrase in content, (name, phrase)
+
+
+def test_final_module_explains_evidence_retention_and_seat_reclaim():
+    content = Path("modules/ROOT/pages/06-prove-recover.adoc").read_text()
+    for pattern in (
+        r"== Retain the proof until Launchpad reclaims the seat",
+        r"Do not delete the PipelineRun",
+        r"revokes\s+the scoped\s+model credential",
+        r"removes\s+the complete seat namespace",
+    ):
+        assert re.search(pattern, content)
+
+
 def test_execute_blocks_do_not_contain_guide_prose():
     for page in Path("modules/ROOT/pages").glob("*.adoc"):
         for block in re.findall(

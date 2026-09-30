@@ -133,10 +133,19 @@ or compliance. A production review must also examine egress, logging, data
 retention, token rotation, tenancy, model-provider handling, and incident
 response.
 
-In *OpenShift Console*, open the `agent-reliability` Deployment and inspect its
-service account name, ConfigMap mount, health status, and environment-variable
-names. Do not reveal Secret values. The Console view should corroborate the
-Terminal checks without expanding learner privilege.
+=== Console checkpoint: Trust boundary
+
+In *OpenShift Console*, open the `agent-reliability` Deployment. Inspect its
+service account name, `agent-reliability-profile` ConfigMap mount, health
+status, and environment-variable names. Do not open Secret contents or reveal
+their values.
+
+Compare those observations with the Terminal authorization checks above. The
+Console must show the `agent-reliability` service account and mounted profile;
+Terminal must still show that the same identity cannot create Deployments. The
+two views prove different parts of one boundary: Console shows which identity
+and policy the pod received, while Terminal proves the authorization enforced
+for that identity.
 
 == Key takeaway
 
