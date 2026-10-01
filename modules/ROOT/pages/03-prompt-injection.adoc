@@ -4,14 +4,14 @@
 Retrieved documents and tool results are untrusted input. In this controlled
 scenario, a runbook contains an instruction that attempts to override policy.
 
-== What you will learn
+== Learn: Fail closed before reasoning
 
 * Explain why retrieved content must never become trusted instructions.
 * Trigger a deterministic prompt-injection test safely.
 * Prove that rejection occurs before tools and model inference.
 * Interpret the guardrail decision without exposing sensitive context.
 
-== See: Prevention before reasoning
+== Show: Prevention before reasoning
 
 The application sends the participant input to the OpenShift AI NeMo
 Guardrails service before it assembles model context. The rail checks explicit
@@ -60,7 +60,7 @@ curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
 Failure injection is enabled only for the lab profile. It must remain disabled
 for a production deployment.
 
-=== Verify
+=== Prove: Verify abstention
 
 Assert the rejection contract.
 

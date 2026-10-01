@@ -39,6 +39,10 @@ class DecisionMetadata(BaseModel):
     executed_tools: list[str] = []
     policy_decisions: list[dict] = []
     model_status: str
+    inference_provider: str
+    configured_model: str
+    observed_model: str
+    model_participated: bool
     trace_id: str
     elapsed_ms: float
     recommendation: str
@@ -116,18 +120,49 @@ class ReliabilityService:
             try:
                 if request.failure == "inference_timeout":
                     raise InferenceUnavailable("injected timeout")
-                recommendation = await self.provider.complete(messages)
-                decisions.append({"control": "inference", "decision": "success", "attempt": attempt + 1})
-                return self._result(started, trace_id, "recommended", requested, self.profile.allowed_tools, decisions, "available", evidence, recommendation)
+                completion = await self.provider.complete(messages)
+                model_status = "available" if self.provider.model_participates else "simulated"
+                decisions.append({"control": "inference", "decision": "success", "attempt": attempt + 1, "provider": self.provider.kind})
+                return self._result(
+                    started,
+                    trace_id,
+                    "recommended",
+                    requested,
+                    self.profile.allowed_tools,
+                    decisions,
+                    model_status,
+                    evidence,
+                    completion.content,
+                    completion.observed_model,
+                )
             except InferenceUnavailable:
                 decisions.append({"control": "inference", "decision": "retry" if attempt + 1 < attempts else "degrade", "attempt": attempt + 1})
                 if attempt + 1 < attempts:
                     await asyncio.sleep(self.profile.retry.backoff_seconds)
         return self._result(started, trace_id, "degraded", requested, self.profile.allowed_tools, decisions, "unavailable", evidence, self.profile.degraded_message)
 
-    @staticmethod
-    def _result(started, trace_id, outcome, requested, executed, decisions, model_status, evidence, recommendation):
-        return DecisionMetadata(outcome=outcome, requested_tools=requested, executed_tools=executed, policy_decisions=decisions, model_status=model_status, trace_id=trace_id, elapsed_ms=round((time.monotonic() - started) * 1000, 2), evidence=evidence, recommendation=recommendation)
+    def _result(self, started, trace_id, outcome, requested, executed, decisions, model_status, evidence, recommendation, observed_model=""):
+        configured_model = self.provider.configured_model
+        return DecisionMetadata(
+            outcome=outcome,
+            requested_tools=requested,
+            executed_tools=executed,
+            policy_decisions=decisions,
+            model_status=model_status,
+            inference_provider=self.provider.kind,
+            configured_model=configured_model,
+            observed_model=observed_model,
+            model_participated=(
+                model_status == "available"
+                and self.provider.model_participates
+                and bool(configured_model)
+                and observed_model == configured_model
+            ),
+            trace_id=trace_id,
+            elapsed_ms=round((time.monotonic() - started) * 1000, 2),
+            evidence=evidence,
+            recommendation=recommendation,
+        )
 
 
 def provider_from_env(profile: AgentReliabilityProfile) -> InferenceProvider:

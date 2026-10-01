@@ -5,14 +5,14 @@ The first run establishes what a trustworthy recommendation looks like before
 you introduce failures. You are the NOC operator responsible for alarm
 `NOC-1042`; the advisor may recommend an action, but it cannot authorize one.
 
-== What you will learn
+== Learn: The healthy contract
 
 * Trace one request across policy, tools, inference, and evidence validation.
 * Distinguish a model recommendation from an approved operational action.
 * Recognize the evidence fields required for a healthy response.
 * Use a trace ID to connect an answer to its supporting decisions.
 
-== See: The evidence-backed request path
+== Show: The evidence-backed request path
 
 The API receives the incident question and applies the input guardrail first.
 An allowed request enters the orchestrator, which can call only the MCP tools
@@ -44,6 +44,8 @@ machine-checkable record of how the application handled the request.
 |`executed_tools` |Which tools actually ran after policy evaluation?
 |`policy_decisions` |Which deterministic controls allowed or denied progress?
 |`model_status` |Was inference available, unavailable, or never called?
+|`inference_provider` |Did the response come from the managed OpenAI-compatible endpoint or the deterministic demo provider?
+|`model_participated` |Did a remote model actually participate in this request?
 |`trace_id` |How can this request be correlated with later evidence?
 |`human_approval_required` |Can the recommendation become an action automatically?
 |===
@@ -56,8 +58,9 @@ the combination of useful content and a provable execution path.
 Open *Reliability Advisor*. Keep the default NOC request, select *Healthy
 evidence-backed request*, and run it. The summary should show outcome
 `recommended`, model `available`, three executed evidence tools, three evidence
-records, human approval `true`, and a trace ID. Expand *Structured decision
-evidence* to see the complete contract.
+records, inference provider `openai-compatible`, model participated `true`,
+human approval `true`, and a trace ID. Expand *Structured decision evidence* to
+see the complete contract.
 
 Now use *Terminal* to prove that the visual summary came from the same API.
 
@@ -104,7 +107,7 @@ and stop; the healthy baseline is not established. This checkpoint connects the
 visual platform state to the command-line evidence you will revisit during
 disruption and qualification.
 
-=== Verify
+=== Prove: Verify the healthy contract
 
 Run the contract assertions against the saved response.
 
@@ -112,6 +115,9 @@ Run the contract assertions against the saved response.
 ----
 jq -e '
   .outcome == "recommended" and
+  .model_status == "available" and
+  .inference_provider == "openai-compatible" and
+  .model_participated == true and
   .human_approval_required == true and
   (.trace_id | length > 0) and
   (.evidence | length >= 3)
@@ -134,16 +140,20 @@ jq '{
   executed_tools,
   policy_decisions,
   model_status,
+  inference_provider,
+  model_participated,
   trace_id,
   human_approval_required
 }' /tmp/healthy.json
 ----
 
-The healthy path should execute the three read-only evidence tools and report
-the model as available. If the environment is configured to fail closed because
-an external guardrail is unavailable, the response can abstain before reaching
-this point. That is not a healthy baseline; capture the policy provider and ask
-the facilitator to restore the guardrail dependency.
+The healthy path should execute the three read-only evidence tools, identify
+the provider as `openai-compatible`, and report that the model participated.
+`deterministic-demo` with status `simulated` is useful for local development,
+but it is not Flightpath inference proof. If the environment is configured to
+fail closed because an external guardrail is unavailable, the response can
+abstain before reaching this point. That is not a healthy baseline; capture the
+policy provider and ask the facilitator to restore the dependency.
 
 If the request fails, inspect application health before retrying:
 

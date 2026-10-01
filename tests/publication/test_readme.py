@@ -30,13 +30,16 @@ def test_showroom_contains_the_complete_reliability_journey():
         assert page.is_file()
         assert name in nav
         content = page.read_text()
-        assert "== What you will learn" in content
+        assert "== Learn:" in content
+        assert "== Show:" in content
+        assert "== Do:" in content
         assert 'role="execute"' in content
-        assert "Verify" in content
+        assert "=== Prove:" in content
         assert "== Key takeaway" in content
 
     assert "conclusion.adoc" in nav
     assert (pages / "conclusion.adoc").is_file()
+    assert sum(page.read_text().count('role="execute"') for page in pages.glob("*.adoc")) == 33
     assert sum(len(page.read_text().split()) for page in pages.glob("*.adoc")) >= 5500
 
 
@@ -51,6 +54,14 @@ def test_showroom_contains_original_learning_visuals():
 
 
 def test_showroom_workspaces_are_part_of_the_journey():
+    site = __import__("yaml").safe_load(Path("site.yml").read_text())
+    assert site["site"]["start_page"] == "agent-reliability-quickstart::index.adoc"
+    story = Path("modules/ROOT/pages/index.adoc").read_text()
+    assert "== Show: The incident begins" in story
+    assert "== Learn: What you will learn" in story
+    assert "|Do 1" in story
+    assert "|Prove" in story
+
     config = __import__("yaml").safe_load(Path("ui-config.yml").read_text())
     assert [tab["name"] for tab in config["tabs"]] == [
         "Reliability Advisor",

@@ -5,14 +5,14 @@ Individual checks are useful, but release evidence must run the same contracts
 repeatably. The qualification Pipeline turns the four journeys into one
 versioned scorecard and leaves a Kubernetes record for review.
 
-== What you will learn
+== Learn: Turn expectations into release evidence
 
 * Start the qualification Pipeline from the participant namespace.
 * Read a scorecard that covers healthy and degraded behavior.
 * Separate behavioral qualification from GitOps recovery.
 * Identify the reusable reliability artifact you can take to another domain.
 
-== See: Evidence and recovery are different
+== Show: Evidence and recovery are different
 
 The Pipeline tests the healthy, prompt-injection, unauthorized-tool, and
 inference-timeout contracts. Each task records a result; the scorecard combines
@@ -90,7 +90,7 @@ the exact Kubernetes record, and the JSON scorecard below provides portable
 contract evidence. Treat the qualification as proven only when all three refer
 to the same PipelineRun.
 
-=== Verify
+=== Prove: Verify the qualification scorecard
 
 Confirm that all four named scenarios passed.
 
@@ -108,13 +108,15 @@ jq -e '
 
 Read the scorecard as more than four green labels. Each row records outcome,
 elapsed time, trace ID, model status, requested and executed tools, policy
-decisions, authorization, and evidence completeness.
+decisions, inference provider, actual model participation, authorization, and
+evidence completeness.
 
 [source,bash,role="execute"]
 ----
 jq -r '
   .scenarios[] |
-  [.scenario, .outcome, .model_status,
+  [.scenario, .outcome, .model_status, .inference_provider,
+   (.model_participated | tostring),
    (.executed_tools | join(",")),
    (.authorization_passed | tostring),
    (.evidence_complete | tostring),
@@ -123,7 +125,8 @@ jq -r '
   | column -t -s $'\t'
 ----
 
-The healthy row requires complete evidence. The unauthorized row requires no
+The healthy row requires complete evidence plus an `openai-compatible`
+provider and actual model participation. The unauthorized row requires no
 executed action. The failure rows require their explicit abstained, denied, or
 degraded outcomes. Elapsed time is recorded for investigation, but one run is
 not a capacity benchmark.

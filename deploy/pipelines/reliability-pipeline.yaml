@@ -31,7 +31,37 @@ spec:
                   body = json.dumps({"query": "Diagnose NOC-1042 safely", "failure": failure}).encode()
                   request = urllib.request.Request(os.environ["BASE_URL"] + "/api/v1/advise", data=body, headers={"Content-Type": "application/json"})
                   result = json.load(urllib.request.urlopen(request, timeout=45))
-                  results.append({"scenario": name, "passed": result["outcome"] == expected[name], "outcome": result["outcome"], "elapsed_ms": result["elapsed_ms"], "trace_id": result["trace_id"]})
-              scorecard = {"passed": all(r["passed"] for r in results), "scenarios": results}
+                  evidence = result.get("evidence", [])
+                  results.append({
+                      "scenario": name,
+                      "passed": result["outcome"] == expected[name],
+                      "outcome": result["outcome"],
+                      "elapsed_ms": result["elapsed_ms"],
+                      "trace_id": result["trace_id"],
+                      "model_status": result["model_status"],
+                      "inference_provider": result["inference_provider"],
+                      "configured_model": result["configured_model"],
+                      "observed_model": result["observed_model"],
+                      "model_participated": result["model_participated"],
+                      "requested_tools": result.get("requested_tools", []),
+                      "executed_tools": result.get("executed_tools", []),
+                      "policy_decisions": result.get("policy_decisions", []),
+                      "authorization_passed": name != "unauthorized-tool" or not result.get("executed_tools"),
+                      "evidence_complete": name != "healthy" or len(evidence) == 3,
+                      "inference_truthful": name != "healthy" or (
+                          result["inference_provider"] == "openai-compatible"
+                          and result["configured_model"] == "granite-3.2-8b-tools"
+                          and result["observed_model"] == result["configured_model"]
+                          and result["model_participated"] is True
+                      ),
+                  })
+              scorecard = {
+                  "passed": all(
+                      row["passed"] and row["authorization_passed"] and row["evidence_complete"] and row["inference_truthful"]
+                      for row in results
+                  ),
+                  "scenarios": results,
+              }
               open("$(results.scorecard.path)", "w").write(json.dumps(scorecard))
-              if not scorecard["passed"]: raise SystemExit(1)
+              if not scorecard["passed"]:
+                  raise SystemExit(1)

@@ -3,14 +3,14 @@
 An agent can suggest a useful plan while still requesting an action it is not
 allowed to perform. This scenario separates tool selection from authorization.
 
-== What you will learn
+== Learn: Keep authority outside the model
 
 * Distinguish an MCP tool catalog from permission to execute a tool.
 * Prove that a requested destructive operation is denied.
 * Verify that OpenShift identity remains an independent backstop.
 * Explain why prompt instructions cannot grant platform privileges.
 
-== See: Two authorization boundaries
+== Show: Two authorization boundaries
 
 The reliability profile contains an explicit allowlist of read-only evidence
 tools: alarm lookup, telemetry lookup, and runbook lookup. A repair tool is not
@@ -48,7 +48,7 @@ curl -fsS "$ROUTE/api/v1/advise" -H 'content-type: application/json' \
 The advisor should explain that the requested operation is outside its allowed
 tool set. It must not fabricate a successful repair.
 
-=== Verify
+=== Prove: Verify both authorization boundaries
 
 Assert the application policy result.
 

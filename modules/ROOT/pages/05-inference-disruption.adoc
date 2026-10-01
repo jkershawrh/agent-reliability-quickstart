@@ -3,14 +3,14 @@
 Inference is a remote dependency. A timeout must not become an invented
 diagnosis, an infinite retry storm, or an unbounded queue of model requests.
 
-== What you will learn
+== Learn: Bound inference failure
 
 * Trigger a controlled inference timeout without disrupting the shared model.
 * Recognize an explicit degraded response.
 * Explain how bounded retries protect both users and shared capacity.
 * Distinguish service degradation from successful diagnosis.
 
-== See: The bounded failure path
+== Show: The bounded failure path
 
 The reliability profile defines a request timeout, retry limit, backoff, and a
 human-readable degraded message. These limits form a time budget around the
@@ -62,7 +62,7 @@ echo "Elapsed seconds: $((END - START))"
 This scenario simulates the application-visible timeout. It does not scale,
 restart, or otherwise alter the shared MaaS service.
 
-=== Verify
+=== Prove: Verify safe degradation
 
 Assert that the response reports degradation rather than success.
 
@@ -124,6 +124,8 @@ jq '{
   evidence: [.evidence[] | {source, reference}],
   executed_tools,
   model_status,
+  inference_provider,
+  model_participated,
   recommendation,
   policy_decisions,
   elapsed_ms,
@@ -131,10 +133,12 @@ jq '{
 }' /tmp/inference-timeout.json
 ----
 
-The injected scenario uses one simulated failed attempt so learners do not
-delay or load the shared Flightpath model. The production profile still defines
-the normal timeout and retry budget. Therefore the measured lab duration proves
-the response contract, not real endpoint recovery time or capacity.
+The injected scenario uses one simulated failed attempt before calling the
+configured provider, so `model_participated` is `false`; learners do not delay
+or load the shared Flightpath model. `inference_provider` still identifies the
+configured boundary. The production profile defines the normal timeout and
+retry budget. Therefore the measured lab duration proves the response contract,
+not real endpoint recovery time or capacity.
 
 == Reason about retry amplification
 

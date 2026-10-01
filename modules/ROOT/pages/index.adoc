@@ -2,7 +2,7 @@
 :page-duration: 75 minutes
 :imagesdir: ../assets/images
 
-== The incident begins
+== Show: The incident begins
 
 Packet loss has crossed the operating threshold for cell group `west-7`. The
 NOC needs a diagnosis, but the evidence is spread across alarm, telemetry, and
@@ -23,7 +23,7 @@ model operational authority.
 
 image::reliability-architecture.svg[Agent reliability request path on Red Hat OpenShift from input guardrails through evidence tools and CPU inference to human approval,width=100%]
 
-== What you will learn
+== Learn: What you will learn
 
 By completing the full journey, you will be able to:
 
@@ -43,10 +43,10 @@ By completing the full journey, you will be able to:
 |===
 |Stage |Question |Evidence
 |Show |What does a healthy agent response look like? |Sourced recommendation, tool trace, model status, and approval boundary
-|Tell |Which control owns each decision? |Reliability profile, service account, RBAC checks, and trust-boundary map
-|Build 1 |Can malicious instructions bypass the guardrail? |Abstention before tools or inference
-|Build 2 |Can model intent grant an unauthorized action? |Allowlist denial plus independent OpenShift RBAC denial
-|Build 3 |Can model failure become a fabricated success? |Bounded failure with evidence preserved and safe manual direction
+|Learn |Which control owns each decision? |Reliability profile, service account, RBAC checks, and trust-boundary map
+|Do 1 |Can malicious instructions bypass the guardrail? |Abstention before tools or inference
+|Do 2 |Can model intent grant an unauthorized action? |Allowlist denial plus independent OpenShift RBAC denial
+|Do 3 |Can model failure become a fabricated success? |Bounded failure with evidence preserved and safe manual direction
 |Prove |Can all contracts be rerun consistently? |Tekton scorecard, GitOps ownership, and exported profile review
 |===
 

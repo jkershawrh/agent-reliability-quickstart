@@ -4,14 +4,14 @@
 You now have a healthy result. This module shows why it can be trusted and
 which control owns each decision. The model proposes; it does not authorize.
 
-== What you will learn
+== Learn: Independent control planes
 
 * Map prevention, authorization, evidence, recovery, and identity controls.
 * Explain why GitOps and behavioral tests solve different problems.
 * Inspect the versioned reliability profile used by the application.
 * Identify the boundary between reasoning and deterministic enforcement.
 
-== See: Independent control planes
+== Show: Independent control planes
 
 Input guardrails run before tools or inference. The orchestrator accepts only
 MCP tools named in the reliability profile. OpenShift RBAC independently limits
@@ -82,7 +82,7 @@ oc auth can-i --as="system:serviceaccount:${NS}:agent-reliability" create deploy
 The service account has only the narrow permission needed to discover its
 guardrail service. It must not be able to create deployments.
 
-=== Verify
+=== Prove: Verify the active policy
 
 Check the essential fields without changing the ConfigMap.
 
