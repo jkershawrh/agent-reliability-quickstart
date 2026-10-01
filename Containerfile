@@ -3,6 +3,9 @@ ARG SOURCE_REVISION=unknown
 LABEL org.opencontainers.image.source="https://github.com/jkershawrh/agent-reliability-quickstart" \
       org.opencontainers.image.revision="${SOURCE_REVISION}" \
       org.opencontainers.image.licenses="MIT"
+USER 0
+RUN rpm -e npm nodejs nodejs-docs nodejs-full-i18n
+USER 1001
 WORKDIR /opt/app-root/src
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
